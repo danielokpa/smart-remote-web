@@ -32,7 +32,7 @@ export default function Footer() {
       title: "Contact",
       links: [
         { label: "info@peppcruise.com", href: "mailto:info@peppcruise.com", isContact: true },
-        { label: "+234 703 838 76", href: "tel:+23470383876", isContact: true }
+        { label: "+234 703 835 5876", href: "tel:+2347038355876", isContact: true }
       ]
     }
   ]
