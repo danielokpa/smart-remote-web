@@ -12,11 +12,11 @@ export default function FAQAccordion() {
       answer: "Pepp Cruise is a multi-service mobility and clean-energy platform offering affordable ride-hailing, EV & CNG charging, CNG vehicle conversions, Pi integration, and digital services. We connect passengers with safe, reliable drivers, provide free WiFi, and support clean, convenient transportation—built For the Love of the People." 
     },
     { 
-      question: "How do I reqyest a Ride", 
-      answer: "You can request a ride easily through the Pepp Cruise app. Just open the app, enter your pickup and destination, select your payment method, choose your ride option, and a nearby driver will be on the way." 
+      question: "How do I request a Ride", 
+      answer: "You can request a ride easily through the PEPP Cruise app. Just open the app, enter your pickup and destination, select your payment method, choose your ride option, and a nearby driver will be on the way." 
     },
     { 
-      question: "Can I convert my car through PePPCruise", 
+      question: "Can I convert my car through PEPP Cruise", 
       answer: "Yes, you can. Simply register your vehicle on the Pepp Cruise app, and you'll be connected to certified third-party CNG conversion centers nationwide for safe and reliable conversion." 
     },
     { 
