@@ -87,7 +87,7 @@ export default function VerifyOtpPage() {
         }
 
         // Redirect (adjust per userType if you want different dashboards)
-        router.push("/dashboard/conversions");
+        router.push("/dashboard");
       } else {
         setError(response.message || "Invalid OTP. Please try again.");
       }
