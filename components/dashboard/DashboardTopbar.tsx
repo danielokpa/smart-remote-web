@@ -24,7 +24,7 @@ export default function DashboardTopbar({
   onLogout,
 }: {
   onOpenSidebar?: () => void;
-  menuButtonRef?: React.RefObject<HTMLButtonElement>;
+  menuButtonRef?: React.RefObject<HTMLButtonElement | null>;
   onLogout?: () => void;
 }) {
   const pathname = usePathname();

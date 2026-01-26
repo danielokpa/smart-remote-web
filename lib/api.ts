@@ -232,6 +232,9 @@ export const cngStationApi = {
       method: "PATCH",
       body: JSON.stringify({ otp, updateData }),
     }),
+
+  getConversionById: (id: string) =>
+    apiRequest(`/cng-station/conversion/${id}`, { method: "GET" }),
 };
 
 export const stationProfileApi = {
@@ -250,10 +253,11 @@ export const stationProfileApi = {
         return apiRequest("/charging-stations/profile", { method: "GET" });
 
       default:
-        return Promise.resolve({
+        return Promise.resolve<ApiResponse<any>>({
           success: false,
           message: "Missing station login type. Please login again.",
           statusCode: 400,
+          data: undefined,
         });
     }
   },
