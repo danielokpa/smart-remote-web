@@ -6,7 +6,9 @@
 import { LoginType } from "@/enums/login-type.enum";
 // API base URL - defaults to empty string for Next.js API routes
 // Set NEXT_PUBLIC_API_URL environment variable for external API
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL + "/pepp-stations" || '';
+
+
 
 // Product key for API requests
 // Set NEXT_PUBLIC_PRODUCT_KEY environment variable
