@@ -192,9 +192,9 @@ export default function ProfilePage() {
                 <div className="w-16 h-16 rounded-2xl bg-[#2d1f3f] border border-white/10 overflow-hidden shrink-0">
                   <Image
                     src={
-                      station.stationImage
-                        ? `/images/${station.stationImage}`
-                        : "/images/navbar-logo.png"
+                      station.stationImage?.startsWith('http') 
+                        ? station.stationImage 
+                        : `/images/${station.stationImage}`
                     }
                     alt="Station"
                     width={64}

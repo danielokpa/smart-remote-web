@@ -134,9 +134,9 @@ export const apiRequest = async <T = any>(
   };
 
   // Add x-product-key header if configured
-  if (PRODUCT_KEY) {
-    headers['x-product-key'] = PRODUCT_KEY;
-  }
+  // if (PRODUCT_KEY) {
+  //   headers['x-product-key'] = PRODUCT_KEY;
+  // }
 
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
