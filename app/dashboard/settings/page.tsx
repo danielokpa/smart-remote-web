@@ -126,7 +126,7 @@ const ALLOWED_UPDATE_FIELDS: Record<LoginType, Array<keyof UpdateFormData>> = {
     "amountPerUnitType",
     "dispenserCount",
     "storageCapacity",
-    "operatorName",
+    // "operatorName",
     "safetyCertifications",
     "isActive",
   ],
