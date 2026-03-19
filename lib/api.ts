@@ -224,20 +224,70 @@ export const cngStationApi = {
   //     method: "GET",
   //   }),
 
-  requestUpdate: () =>
-    apiRequest("/cng-station/update", {
-      method: "POST",
-    }),
-
-  updateWithOtp: (otp: string, updateData: any) =>
-    apiRequest("/cng-station/update-otp", {
-      method: "PATCH",
-      body: JSON.stringify({ otp, updateData }),
-    }),
 
   getConversionById: (id: string) =>
     apiRequest(`/cng-station/conversion/${id}`, { method: "GET" }),
 };
+
+export const stationSettingsApi = {
+  requestUpdate: () => {
+    const stationType = getStationLoginType();
+
+    switch(stationType) {
+      case LoginType.CNG_STATION:
+        return apiRequest('/cng-fueling-stations/update', {
+          method: "POST",
+        });
+        
+      case LoginType.CNG_CONVERSION_STATION:
+        return apiRequest('/cng-station/update', {
+          method: "POST",
+        });
+        
+      case LoginType.CHARGING_STATION:
+        return apiRequest('/charging-stations/update', {
+          method: "POST",
+        });
+
+      default:
+        return Promise.resolve({
+          success: false,
+          message: "Missing station login type. Please login again",
+          statusCode: 400,
+        })
+    }
+  },
+
+  updateWithOtp: (otp: string, updateData: any) => {
+    const stationType = getStationLoginType();
+    switch (stationType) {
+      case LoginType.CNG_STATION:
+        return apiRequest("/cng-fueling-station/update-otp", {
+          method: "PATCH",
+          body: JSON.stringify({ otp, updateData }),
+        });
+      case LoginType.CNG_CONVERSION_STATION:
+        return apiRequest("/cng-station/update-otp", {
+          method: "PATCH",
+          body: JSON.stringify({ otp, updateData }),
+        });
+
+      case LoginType.EV_CHARGING_STATION:
+        return apiRequest("/charging-stations/update-otp", {
+          method: "PATCH",
+          body: JSON.stringify({ otp, updateData }),
+        });
+
+      default:
+        return Promise.resolve<ApiResponse<any>>({
+          success: false,
+          message: "Missing station login type. Please login again.",
+          statusCode: 400,
+          data: undefined,
+        });
+    }
+  },
+}
 
 export const stationProfileApi = {
   getProfile: () => {

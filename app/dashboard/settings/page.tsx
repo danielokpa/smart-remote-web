@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { cngStationApi, stationProfileApi } from "@/lib/api";
+import { cngStationApi, stationProfileApi, getStationLoginType, stationSettingsApi } from "@/lib/api";
+import LocationPicker from "@/components/dashboard/settings/LocationPicker";
+import { LoginType } from "@/enums/login-type.enum";
 
 /** -----------------------------
  * Types
@@ -9,6 +11,9 @@ import { cngStationApi, stationProfileApi } from "@/lib/api";
 type StationProfile = {
   name?: string;
   address?: string;
+  latitude?: number | null,
+  longitude?: number | null,
+  placeId?: string | null,
   openingTime?: string; // "HH:mm"
   closingTime?: string; // "HH:mm"
   amountPerUnit?: number | null;
@@ -24,6 +29,9 @@ type StationProfile = {
 type UpdateFormData = {
   name?: string;
   address?: string;
+  latitude?: number | null,
+  longitude?: number | null,
+  // placeId?: string | null,
   openingTime?: string;
   closingTime?: string;
   amountPerUnit?: number | null;
@@ -31,7 +39,7 @@ type UpdateFormData = {
   amountPerUnitType?: string;
   dispenserCount?: number | null;
   storageCapacity?: number | null;
-  operatorName?: string;
+  // operatorName?: string;
   safetyCertifications?: string;
   isActive?: boolean;
 };
@@ -88,6 +96,88 @@ function buildPatchPayload(
   }
 
   return patch;
+}
+
+const ALLOWED_UPDATE_FIELDS: Record<LoginType, Array<keyof UpdateFormData>> = {
+  [LoginType.CNG_STATION]: [
+    "name",
+    "address",
+    "latitude",
+    "longitude",
+    "openingTime",
+    "closingTime",
+    "amountPerUnit",
+    "currency",
+    "amountPerUnitType",
+    "dispenserCount",
+    "storageCapacity",
+    "safetyCertifications",
+    "isActive",
+  ],
+  [LoginType.CNG_CONVERSION_STATION]: [
+    "name",
+    "address",
+    "latitude",
+    "longitude",
+    "openingTime",
+    "closingTime",
+    "amountPerUnit",
+    "currency",
+    "amountPerUnitType",
+    "dispenserCount",
+    "storageCapacity",
+    "operatorName",
+    "safetyCertifications",
+    "isActive",
+  ],
+  [LoginType.EV_CHARGING_STATION]: [
+    "name",
+    "address",
+    "latitude",
+    "longitude",
+    "openingTime",
+    "closingTime",
+    "amountPerUnit",
+    "currency",
+    "amountPerUnitType",
+    "isActive",
+  ],
+};
+
+function filterPayloadByStationType(
+  stationType: LoginType | null,
+  payload: Partial<UpdateFormData>
+): Partial<UpdateFormData> {
+  if (!stationType) return {};
+
+  const allowedKeys = ALLOWED_UPDATE_FIELDS[stationType] ?? [];
+  const filtered: Partial<UpdateFormData> = {};
+
+  for (const key of allowedKeys) {
+    const value = payload[key];
+
+    if (value !== undefined) {
+      filtered[key] = value;
+    }
+  }
+
+  return filtered;
+}
+
+function removeEmptyValues(
+  payload: Partial<UpdateFormData>
+): Partial<UpdateFormData> {
+  const cleaned: Partial<UpdateFormData> = {};
+
+  for (const [key, value] of Object.entries(payload)) {
+    if (value === undefined) continue;
+
+    if (typeof value === "string" && value.trim() === "") continue;
+
+    cleaned[key as keyof UpdateFormData] = value as any;
+  }
+
+  return cleaned;
 }
 
 /** -----------------------------
@@ -213,6 +303,9 @@ export default function SettingsPage() {
       setFormData({
         name: normalizeString(s?.name),
         address: normalizeString(s?.address),
+        latitude: normalizeNumber(s?.latitude),
+        longitude: normalizeNumber(s?.longitude),
+        // placeId: s?.placeId ?? null,
         openingTime: normalizeString(s?.openingTime),
         closingTime: normalizeString(s?.closingTime),
         amountPerUnit:
@@ -250,7 +343,7 @@ export default function SettingsPage() {
     setError("");
 
     try {
-      const response = await cngStationApi.requestUpdate();
+      const response = await stationSettingsApi.requestUpdate();
 
       if (response.success) {
         // ✅ toast above everything (z-index fixed)
@@ -284,17 +377,25 @@ export default function SettingsPage() {
       return;
     }
 
+    const stationType = getStationLoginType();
+
     // Only send modified fields
     const patch = buildPatchPayload(station, formData);
 
-    if (Object.keys(patch).length === 0) {
-      showToast("error", "No changes detected. Please edit at least one field.");
+    // Step 2: keep only fields allowed for this station type
+    const typeSafePatch = filterPayloadByStationType(stationType, patch);
+
+    // Step 3: remove empty/blank values
+    const finalPatch = removeEmptyValues(typeSafePatch);
+
+    if (Object.keys(finalPatch).length === 0) {
+      showToast("error", "No valid changes detected for this station type. Please edit at least one field.");
       setLoading(false);
       return;
     }
 
     try {
-      const response = await cngStationApi.updateWithOtp(otp, patch);
+      const response = await stationSettingsApi.updateWithOtp(otp, finalPatch);
 
       if (response.success) {
         showToast("success", "Station information updated successfully!");
@@ -476,7 +577,7 @@ export default function SettingsPage() {
                     </div>
 
                     {/* Address */}
-                    <div className="flex flex-col gap-2">
+                    {/* <div className="flex flex-col gap-2">
                       <label className="font-manrope font-semibold text-[14px] text-white">Address</label>
                       <input
                         type="text"
@@ -484,6 +585,25 @@ export default function SettingsPage() {
                         value={formData.address ?? ""}
                         onChange={handleInputChange}
                         className="w-full rounded-full p-3 bg-[#2d1f3f] border border-white/10 text-white placeholder:text-[#8E94A4] font-manrope text-[14px] outline-none focus:border-[#762FB8] focus:ring-2 focus:ring-[#762FB8]/20 transition-all"
+                      />
+                    </div> */}
+                    <div className="sm:col-span-2">
+                      <LocationPicker
+                        value={{
+                          address: formData.address ?? "",
+                          latitude: formData.latitude ?? null,
+                          longitude: formData.longitude ?? null,
+                          placeId: formData.placeId ?? null,
+                        }}
+                        onChange={(next) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            address: next.address,
+                            latitude: next.latitude,
+                            longitude: next.longitude,
+                            placeId: next.placeId,
+                          }))
+                        }
                       />
                     </div>
 
