@@ -157,7 +157,7 @@ function filterPayloadByStationType(
     const value = payload[key];
 
     if (value !== undefined) {
-      filtered[key] = value;
+      filtered[key] = value as any;
     }
   }
 
