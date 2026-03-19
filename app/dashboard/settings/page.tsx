@@ -593,14 +593,14 @@ export default function SettingsPage() {
                           address: formData.address ?? "",
                           latitude: formData.latitude ?? null,
                           longitude: formData.longitude ?? null,
-                          placeId: formData.placeId ?? null,
+                          placeId: /*formData.placeId ??*/ null,
                         }}
                         onChange={(next) =>
                           setFormData((prev) => ({
                             ...prev,
                             address: next.address,
-                            latitude: next.latitude,
-                            longitude: next.longitude,
+                            latitude: normalizeNumber(next.latitude),
+                            longitude: normalizeNumber(next.longitude),
                             placeId: next.placeId,
                           }))
                         }
@@ -686,7 +686,7 @@ export default function SettingsPage() {
                     </div>
 
                     {/* Operator */}
-                    <div className="flex flex-col gap-2 sm:col-span-2">
+                    {/* <div className="flex flex-col gap-2 sm:col-span-2">
                       <label className="font-manrope font-semibold text-[14px] text-white">Operator Name</label>
                       <input
                         type="text"
@@ -695,7 +695,7 @@ export default function SettingsPage() {
                         onChange={handleInputChange}
                         className="w-full rounded-full p-3 bg-[#2d1f3f] border border-white/10 text-white placeholder:text-[#8E94A4] font-manrope text-[14px] outline-none focus:border-[#762FB8] focus:ring-2 focus:ring-[#762FB8]/20 transition-all"
                       />
-                    </div>
+                    </div> */}
 
                     {/* Safety */}
                     <div className="flex flex-col gap-2 sm:col-span-2">

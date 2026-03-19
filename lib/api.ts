@@ -244,7 +244,7 @@ export const stationSettingsApi = {
           method: "POST",
         });
         
-      case LoginType.CHARGING_STATION:
+      case LoginType.EV_CHARGING_STATION:
         return apiRequest('/charging-stations/update', {
           method: "POST",
         });
