@@ -316,7 +316,7 @@ export default function SettingsPage() {
           s?.dispenserCount === undefined ? null : (s?.dispenserCount ?? null),
         storageCapacity:
           s?.storageCapacity === undefined ? null : (s?.storageCapacity ?? null),
-        operatorName: normalizeString(s?.operatorName),
+        // operatorName: normalizeString(s?.operatorName),
         safetyCertifications: normalizeString(s?.safetyCertifications),
         isActive: s?.isActive ?? true,
       });
