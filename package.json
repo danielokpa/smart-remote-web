@@ -1,13 +1,13 @@
 {
-  "name": "peppcruise-cng-conversion-website",
+  "name": "peppcruise-stations-website",
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": "22"
+    "node": "24"
   },
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "next dev --turbopack",
+    "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint"
   },

@@ -63,6 +63,20 @@ body::-webkit-scrollbar-thumb {
   background: transparent;
 }
 
+/* For Chrome, Safari, Edge, and Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* For Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+
 /* Utilities specific to the landing visuals */
 .container-edge {
   @apply max-w-[1200px] mx-auto px-4 md:px-6 lg:px-8;
@@ -110,4 +124,13 @@ body::-webkit-scrollbar-thumb {
 .auth-no-scroll {
   height: 100dvh; /* dynamic viewport height */
   overflow: hidden;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }

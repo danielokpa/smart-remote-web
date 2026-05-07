@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 
 import { useStationApi } from "@/lib/hooks/stations/useStationApi";
-import { StatusFilterDropdown } from "@/components/dashboard/conversions/StatusFilterDropdown";
 import TableSkeleton from "@/components/dashboard/TableSkeleton";
 import CursorPagination from "@/components/dashboard/CursorPagination";
 import RequestsTable, {
@@ -21,16 +20,15 @@ import RequestsTable, {
 
 type StatusFilter = "all" | "approved" | "pending" | "rejected";
 
-interface Conversion {
+interface FuelingRequest {
   id: string;
   status: string;
   createdAt?: string;
-  applicantName?: string;
-  vehicleName?: string;
-  vehicleInfo?: any;
-  user?: any;
   fullName?: string;
-  brandOfVehicle?: string;
+  vehicleBrand?: string;
+  vehiclePlateNumber?: string;
+  requestedFuelAmount?: number;
+  [key: string]: any;
 }
 
 /* ================= HELPERS ================= */
@@ -71,25 +69,10 @@ function safeText(v: unknown, fallback = "—") {
   return String(v);
 }
 
-function pickApplicantName(c: Conversion) {
-  return (
-    c.applicantName ||
-    c.fullName ||
-    c?.vehicleInfo?.applicantName ||
-    c?.user?.fullName ||
-    c?.user?.name ||
-    "—"
-  );
-}
+function formatFuelAmount(value?: number) {
+  if (value === undefined || value === null) return "—";
 
-function pickVehicleName(c: Conversion) {
-  return (
-    c.vehicleName ||
-    c.brandOfVehicle ||
-    c?.vehicleInfo?.vehicleName ||
-    c?.vehicleInfo?.plateNumber ||
-    "—"
-  );
+  return `${value.toLocaleString()} KG`;
 }
 
 /* ================= STATUS PILL ================= */
@@ -128,11 +111,11 @@ function StatusPill({ status }: { status: string }) {
 
 /* ================= PAGE ================= */
 
-export default function ConversionsPage() {
+export default function FuelingRequestsPage() {
   const api = useStationApi();
   const router = useRouter();
 
-  const [conversions, setConversions] = useState<Conversion[]>([]);
+  const [requests, setRequests] = useState<FuelingRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -147,8 +130,8 @@ export default function ConversionsPage() {
 
   /* ================= FETCH ================= */
 
-  const fetchConversions = useCallback(async () => {
-    if (!conversions.length) {
+  const fetchRequests = useCallback(async () => {
+    if (!requests.length) {
       setLoading(true);
     }
 
@@ -161,52 +144,56 @@ export default function ConversionsPage() {
       });
 
       if (res.success && res.data) {
-        setConversions(res.data.data || []);
+        setRequests(res.data.data || []);
         setNextCursor(res.data.nextCursor || null);
       } else {
-        setError(res.message || "Failed to load conversions");
+        setError(
+          res.message || "Failed to load fueling requests"
+        );
       }
     } catch {
-      setError("An error occurred while loading conversions");
+      setError("Failed to load fueling requests");
     } finally {
       setLoading(false);
     }
-  }, [cursor, api, conversions.length]);
+  }, [cursor, api, requests.length]);
 
   useEffect(() => {
-    fetchConversions();
-  }, [fetchConversions]);
+    fetchRequests();
+  }, [fetchRequests]);
 
   /* ================= ROWS ================= */
 
   const rows = useMemo(() => {
     const filtered =
       statusFilter === "all"
-        ? conversions
-        : conversions.filter(
-            (c) => normalizeStatus(c.status) === statusFilter
+        ? requests
+        : requests.filter(
+            (i) => normalizeStatus(i.status) === statusFilter
           );
 
-    return filtered.map((c) => ({
-      id: c.id,
-      applicant: pickApplicantName(c),
-      vehicle: pickVehicleName(c),
-      status: c.status,
-      createdAt: c.createdAt,
+    return filtered.map((item) => ({
+      id: item.id,
+      customer: safeText(item.fullName),
+      vehicle: safeText(item.vehicleBrand),
+      plateNumber: safeText(item.vehiclePlateNumber),
+      fuelAmount: item.requestedFuelAmount,
+      status: item.status,
+      createdAt: item.createdAt,
     }));
-  }, [conversions, statusFilter]);
+  }, [requests, statusFilter]);
 
-  /* ================= TABLE COLUMNS ================= */
+  /* ================= COLUMNS ================= */
 
   const columns: TableColumn<(typeof rows)[number]>[] = [
     {
-      key: "applicant",
-      title: "Applicant",
+      key: "customer",
+      title: "Customer",
       align: "left",
       render: (row) => (
         <div className="min-w-0">
           <p className="truncate font-semibold text-white">
-            {row.applicant}
+            {row.customer}
           </p>
 
           <p className="mt-1 text-xs text-[#8E94A4]">
@@ -221,8 +208,23 @@ export default function ConversionsPage() {
       title: "Vehicle",
       align: "left",
       render: (row) => (
-        <span className="text-white">
-          {safeText(row.vehicle)}
+        <div>
+          <p className="text-white">{row.vehicle}</p>
+
+          <p className="mt-1 text-xs text-[#8E94A4]">
+            {row.plateNumber}
+          </p>
+        </div>
+      ),
+    },
+
+    {
+      key: "fuelAmount",
+      title: "Fuel Amount",
+      align: "center",
+      render: (row) => (
+        <span className="font-medium text-white">
+          {formatFuelAmount(row.fuelAmount)}
         </span>
       ),
     },
@@ -269,7 +271,7 @@ export default function ConversionsPage() {
         >
           View Details
 
-          <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+          <ArrowUpRight className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
         </div>
       ),
     },
@@ -280,22 +282,17 @@ export default function ConversionsPage() {
   return (
     <div className="w-full">
       {/* ================= HEADER ================= */}
-      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-[30px] font-bold text-white">
-            Conversions
+            Fueling Requests
           </h1>
 
           <p className="mt-1 text-sm text-[#8E94A4]">
-            Track and manage conversion requests assigned to
+            Track and manage CNG fueling requests assigned to
             your station.
           </p>
         </div>
-
-        <StatusFilterDropdown
-          value={statusFilter}
-          onChange={setStatusFilter}
-        />
       </div>
 
       {/* ================= ERROR ================= */}
@@ -313,13 +310,15 @@ export default function ConversionsPage() {
           columns={columns}
           data={rows}
           loading={loading}
-          skeleton={<TableSkeleton rows={6} columns={5} />}
+          skeleton={<TableSkeleton rows={6} columns={6} />}
           rowKey={(row) => row.id}
           onRowClick={(row) =>
-            router.push(`/dashboard/conversions/${row.id}`)
+            router.push(
+              `/dashboard/fueling-requests/${row.id}`
+            )
           }
-          emptyTitle="No conversions found"
-          emptyDescription="Try changing filters or refreshing"
+          emptyTitle="No fueling requests found"
+          emptyDescription="Try refreshing or adjusting filters"
         />
       </div>
 

@@ -3,24 +3,30 @@
 import { useEffect, useMemo, useState } from "react";
 import StatCard from "@/components/dashboard/StatCard";
 import QuickActionCard from "@/components/dashboard/QuickActionCard";
-import TodayConversions from "@/components/dashboard/TodayConversions";
-import { cngStationApi } from "@/lib/api";
+import TodayItems from "@/components/dashboard/TodayItems";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, AlertTriangle, ClipboardList } from "lucide-react";
+import { isSameDay } from "@/lib/utils/date.util";
+import { useStationUI } from "@/lib/hooks/dashboard/useStationUi";
+import { useStationApi } from "@/lib/hooks/stations/useStationApi";
+import type {DashboardItem } from "@/lib/types/dashboardItem.type";
 
-type Conversion = {
-  id: string;
-  status: string;
-  createdAt?: string;
-};
 
 export default function DashboardHomePage() {
   const router = useRouter();
+  const { labels, routes } = useStationUI();
+  const api = useStationApi();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [todayItems, setTodayItems] = useState<Conversion[]>([]);
-  const [allItems, setAllItems] = useState<Conversion[]>([]);
+  const [todayItems, setTodayItems] = useState<DashboardItem[]>([]);
+  const [allItems, setAllItems] = useState<DashboardItem[]>([]);
+  
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [prevStack, setPrevStack] = useState<string[]>([]);
+
+  const limit = 10;
 
   useEffect(() => {
     let mounted = true;
@@ -30,24 +36,21 @@ export default function DashboardHomePage() {
       setError("");
 
       try {
-        // ✅ adjust this to the correct station endpoint when available
-        const res = await cngStationApi.getConversions(1, 30);
+        const res = await api.fetchDashboard({
+          cursor,
+          limit,
+        });
 
         if (!mounted) return;
 
         if (res.success && res.data) {
-          const items = (res.data.data || []) as Conversion[];
+          const items = (res.data.data || []) as DashboardItem[];
           setAllItems(items);
-
-          const today = new Date();
-          const isSameDay = (d: Date) =>
-            d.getFullYear() === today.getFullYear() &&
-            d.getMonth() === today.getMonth() &&
-            d.getDate() === today.getDate();
 
           setTodayItems(
             items.filter((x) => (x.createdAt ? isSameDay(new Date(x.createdAt)) : false))
           );
+          setNextCursor(res.data.nextCursor || null)
         } else {
           setError(res.message || "Failed to load dashboard data.");
         }
@@ -88,7 +91,7 @@ export default function DashboardHomePage() {
             Home Overview
           </h1>
           <p className="font-manrope text-[#8E94A4] text-[14px] md:text-[15px] mt-1">
-            Track conversion flow and manage today’s workload.
+            Track { labels.conversions } flow and manage today’s workload.
           </p>
         </div>
       </div>
@@ -104,9 +107,9 @@ export default function DashboardHomePage() {
       {/* Top section: stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <StatCard
-          title="Total Requests (loaded)"
+          title={`Total ${labels.conversions}`}
           value={loading ? "…" : stats.total}
-          subtitle="Recent sample from your station"
+          subtitle="Recent activity"
           icon={<ClipboardList className="w-5 h-5 text-white" />}
         />
         <StatCard
@@ -129,10 +132,10 @@ export default function DashboardHomePage() {
       <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1 space-y-6">
           <QuickActionCard
-            title="Quick Actions"
-            description="Open conversions and update station details without digging through menus."
-            href="/dashboard/conversions"
-            cta="View Conversions"
+            title={labels.quickActionTitle}
+            description={`Open ${labels.conversions.toLowerCase()} and manage requests.`}
+            href={routes.primary}
+            cta={labels.quickActionCta}
           />
 
           <div className="rounded-2xl bg-[#251a34] border border-white/10 p-6 shadow-2xl">
@@ -154,7 +157,13 @@ export default function DashboardHomePage() {
         </div>
 
         <div className="lg:col-span-2">
-          <TodayConversions items={todayItems} loading={loading} />
+          <TodayItems
+            items={todayItems}
+            loading={loading}
+            title={labels.todayTitle}
+            description={`Recent ${labels.conversions.toLowerCase()} at your station`}
+            emptyText={labels.emptyState}
+          />
         </div>
       </div>
 
@@ -166,13 +175,13 @@ export default function DashboardHomePage() {
               Recent Activity
             </p>
             <p className="font-manrope text-[#8E94A4] text-[13px] mt-1">
-              A quick look at your latest conversion requests
+              A quick look at your latest {labels.conversions.toLowerCase()}
             </p>
           </div>
 
           <button
             type="button"
-            onClick={() => router.push("/dashboard/conversions")}
+            onClick={() => router.push(routes.primary)}
             className="px-4 py-2 rounded-full border border-white/10 text-white font-manrope font-semibold text-[14px] hover:bg-white/5 transition"
           >
             Open list

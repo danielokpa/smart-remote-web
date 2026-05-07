@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { usePathname, useRouter } from "next/navigation";
-import { removeAuthToken, removeStationLoginType } from "@/lib/api";
+import { removeAuthToken, removeStationLoginType } from "@/lib/api/api-client";
 
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import DashboardTopbar from "@/components/dashboard/DashboardTopbar";

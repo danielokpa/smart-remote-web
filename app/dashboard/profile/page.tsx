@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { stationProfileApi } from "@/lib/api"; // ✅ now uses cngStationApi.getProfile()
+import { useStationApi } from "@/lib/hooks/stations/useStationApi";
 
 type StationProfile = {
   id: string;
@@ -69,6 +69,7 @@ export default function ProfilePage() {
   const [station, setStation] = useState<StationProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const api = useStationApi();
 
   const statusPill = useMemo(() => {
     const active = station?.isActive ?? false;
@@ -108,7 +109,7 @@ export default function ProfilePage() {
       setError("");
 
       try {
-        const res = await stationProfileApi.getProfile();
+        const res = await api.getProfile();
 
         if (!mounted) return;
 
