@@ -22,7 +22,8 @@ import {
   StickyNote,
   RefreshCcw,
 } from "lucide-react";
-import { cngStationApi } from "@/lib/api";
+
+import { useStationApi } from "@/lib/hooks/stations/useStationApi";
 
 type ConversionDetails = {
   id: string;
@@ -65,13 +66,21 @@ type ConversionDetails = {
 
 function safeText(v: unknown, fallback = "—") {
   if (v === null || v === undefined) return fallback;
-  if (typeof v === "string" && v.trim() === "") return fallback;
+
+  if (typeof v === "string" && v.trim() === "") {
+    return fallback;
+  }
+
   return String(v);
 }
 
 function formatDate(value: string | Date) {
   const d = typeof value === "string" ? new Date(value) : value;
-  if (Number.isNaN(d.getTime())) return String(value);
+
+  if (Number.isNaN(d.getTime())) {
+    return String(value);
+  }
+
   return d.toLocaleString();
 }
 
@@ -82,19 +91,24 @@ function statusMeta(status?: string) {
     return {
       label: "Approved",
       pill: "bg-green-500/15 border border-green-500/30 text-green-300",
+      dot: "bg-green-400",
       icon: <BadgeCheck className="w-4 h-4 text-green-300" />,
     };
   }
+
   if (s.includes("rejected")) {
     return {
       label: "Rejected",
       pill: "bg-red-500/15 border border-red-500/30 text-red-300",
+      dot: "bg-red-400",
       icon: <XCircle className="w-4 h-4 text-red-300" />,
     };
   }
+
   return {
     label: "Pending",
     pill: "bg-yellow-500/15 border border-yellow-500/30 text-yellow-300",
+    dot: "bg-yellow-400",
     icon: <AlertTriangle className="w-4 h-4 text-yellow-300" />,
   };
 }
@@ -113,17 +127,22 @@ function Field({
   multiline?: boolean;
 }) {
   return (
-    <div className="rounded-2xl bg-[#2d1f3f] border border-white/10 p-4">
+    <div className="rounded-2xl border border-white/10 bg-[#2d1f3f] p-4">
       <div className="flex items-center gap-2 text-[#8E94A4]">
         <span className="shrink-0">{icon}</span>
-        <p className="font-manrope text-[12px]">{label}</p>
+
+        <p className="font-manrope text-[12px]">
+          {label}
+        </p>
       </div>
 
       <p
         className={clsx(
-          "mt-2 font-manrope font-semibold text-[14px] text-white",
+          "mt-2 font-manrope text-[14px] font-semibold text-white",
           mono && "font-mono text-[13px]",
-          multiline ? "whitespace-pre-wrap break-words" : "truncate"
+          multiline
+            ? "whitespace-pre-wrap break-words"
+            : "truncate"
         )}
         title={typeof value === "string" ? value : undefined}
       >
@@ -133,24 +152,22 @@ function Field({
   );
 }
 
-/**
- * ✅ Route suggestion (App Router):
- * app/dashboard/conversions/[id]/page.tsx
- *
- * ✅ API suggestion:
- * cngStationApi.getConversionById(id)
- * -> { success, data, message }
- */
 export default function ConversionDetailsPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const id = params?.id;
 
+  const api = useStationApi();
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [data, setData] = useState<ConversionDetails | null>(null);
+  const [data, setData] =
+    useState<ConversionDetails | null>(null);
 
-  const meta = useMemo(() => statusMeta(data?.status), [data?.status]);
+  const meta = useMemo(
+    () => statusMeta(data?.status),
+    [data?.status]
+  );
 
   const fetchDetails = async () => {
     if (!id) return;
@@ -159,16 +176,20 @@ export default function ConversionDetailsPage() {
     setError("");
 
     try {
-      // ✅ Replace this with your real endpoint name
-      const res = await (cngStationApi as any).getConversionById?.(id);
+      const res = await api.getActivityById?.(id);
 
       if (res?.success && res?.data) {
         setData(res.data as ConversionDetails);
       } else {
-        setError(res?.message || "Failed to load conversion details.");
+        setError(
+          res?.message ||
+            "Failed to load conversion details."
+        );
       }
     } catch {
-      setError("An error occurred while loading conversion details.");
+      setError(
+        "An error occurred while loading conversion details."
+      );
     } finally {
       setLoading(false);
     }
@@ -176,30 +197,35 @@ export default function ConversionDetailsPage() {
 
   useEffect(() => {
     fetchDetails();
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   return (
     <div className="w-full">
-      {/* Top row */}
+      {/* ================= TOP BAR ================= */}
       <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div className="flex items-start gap-3">
           <button
             type="button"
             onClick={() => router.back()}
-            className="w-10 h-10 rounded-full border border-white/10 hover:bg-white/5 transition flex items-center justify-center"
-            aria-label="Back"
-            title="Back"
+            className="
+              flex h-10 w-10 items-center justify-center
+              rounded-full border border-white/10
+              transition hover:bg-white/5
+            "
           >
-            <ArrowLeft className="w-5 h-5 text-white" />
+            <ArrowLeft className="h-5 w-5 text-white" />
           </button>
 
           <div>
-            <h1 className="font-manrope font-bold text-[28px] md:text-[34px] leading-tight text-white">
+            <h1 className="text-[28px] font-bold leading-tight text-white md:text-[34px]">
               Conversion Details
             </h1>
-            <p className="font-manrope text-[#8E94A4] text-[14px] md:text-[15px] mt-1">
-              Review applicant and vehicle information for this request.
+
+            <p className="mt-1 text-[14px] text-[#8E94A4] md:text-[15px]">
+              Review applicant and vehicle information
+              for this request.
             </p>
           </div>
         </div>
@@ -207,7 +233,7 @@ export default function ConversionDetailsPage() {
         <div className="flex items-center gap-2">
           <span
             className={clsx(
-              "inline-flex items-center gap-2 px-3 py-2 rounded-full text-[13px] font-manrope font-semibold",
+              "inline-flex items-center gap-2 rounded-full px-3 py-2 text-[13px] font-semibold",
               meta.pill
             )}
           >
@@ -218,144 +244,240 @@ export default function ConversionDetailsPage() {
           <button
             type="button"
             onClick={fetchDetails}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 text-white font-manrope font-semibold text-[14px] hover:bg-white/5 transition"
+            className="
+              inline-flex items-center gap-2
+              rounded-full border border-white/10
+              px-4 py-2
+              text-[14px] font-semibold text-white
+              transition hover:bg-white/5
+            "
           >
-            <RefreshCcw className="w-4 h-4" />
+            <RefreshCcw className="h-4 w-4" />
             Refresh
           </button>
         </div>
       </div>
 
-      {/* Error */}
+      {/* ================= ERROR ================= */}
       {error && (
-        <div className="mb-6 rounded-2xl p-4 bg-red-500/15 border border-red-500/30">
-          <p className="font-manrope font-medium text-[14px] text-red-300">
+        <div className="mb-6 rounded-2xl border border-red-500/30 bg-red-500/15 p-4">
+          <p className="text-[14px] font-medium text-red-300">
             {error}
           </p>
         </div>
       )}
 
-      {/* Loading */}
+      {/* ================= LOADING ================= */}
       {loading && (
-        <div className="rounded-2xl bg-[#251a34] border border-white/10 p-6 md:p-8 shadow-2xl">
-          <div className="h-6 w-1/3 bg-white/10 rounded animate-pulse" />
-          <div className="mt-2 h-4 w-2/3 bg-white/10 rounded animate-pulse" />
+        <div className="rounded-3xl border border-white/10 bg-[#251a34] p-6 shadow-2xl md:p-8">
+          <div className="h-6 w-1/3 animate-pulse rounded bg-white/10" />
 
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="mt-2 h-4 w-2/3 animate-pulse rounded bg-white/10" />
+
+          <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
             {Array.from({ length: 10 }).map((_, i) => (
               <div
                 key={i}
-                className="h-16 rounded-2xl bg-white/10 animate-pulse"
+                className="h-16 animate-pulse rounded-2xl bg-white/10"
               />
             ))}
           </div>
         </div>
       )}
 
-      {/* Content */}
+      {/* ================= CONTENT ================= */}
       {!loading && data && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left: summary card */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          {/* ================= LEFT SIDEBAR ================= */}
           <div className="lg:col-span-1">
-            <div className="relative rounded-2xl bg-[#251a34] border border-white/10 p-6 shadow-2xl overflow-hidden">
-              {/* glow */}
+            <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#251a34] p-6 shadow-2xl">
+              {/* Glow */}
               <div
-                className="absolute w-[70%] aspect-square -top-10 -right-10 opacity-40 rounded-full blur-[110px] pointer-events-none"
+                className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full opacity-40 blur-[120px]"
                 style={{
                   background:
-                    "radial-gradient(45.33% 45.33% at 50% 50%, #8A25E9 0%, rgba(117,31,198,0.656447) 38.28%, rgba(78,21,131,0) 100%)",
+                    "radial-gradient(circle, rgba(138,37,233,0.7) 0%, rgba(117,31,198,0.35) 45%, rgba(78,21,131,0) 100%)",
                 }}
               />
 
               <div className="relative z-10">
-                <p className="font-manrope font-bold text-white text-[18px]">
-                  Applicant
-                </p>
-
-                <div className="mt-4 space-y-3">
-                  <Field
-                    icon={<User className="w-4 h-4" />}
-                    label="Full Name"
-                    value={data.fullName}
-                  />
-                  <Field
-                    icon={<Mail className="w-4 h-4" />}
-                    label="Email"
-                    value={data.email}
-                  />
-                  <Field
-                    icon={<Phone className="w-4 h-4" />}
-                    label="Phone"
-                    value={data.contactPhone}
-                  />
-
-                  <div className="rounded-2xl bg-[#2d1f3f] border border-white/10 p-4">
-                    <div className="flex items-center gap-2 text-[#8E94A4]">
-                      <Hash className="w-4 h-4" />
-                      <p className="font-manrope text-[12px]">Request ID</p>
-                    </div>
-                    <p className="mt-2 font-mono text-[12px] text-white break-all">
-                      {data.id}
-                    </p>
+                {/* Header */}
+                <div className="flex items-start gap-4">
+                  <div
+                    className="
+                      flex h-16 w-16 items-center justify-center
+                      rounded-2xl border border-white/10
+                      bg-[#2d1f3f]
+                    "
+                  >
+                    <User className="h-8 w-8 text-white" />
                   </div>
 
-                  <div className="rounded-2xl bg-[#2d1f3f] border border-white/10 p-4">
-                    <div className="flex items-center gap-2 text-[#8E94A4]">
-                      <Calendar className="w-4 h-4" />
-                      <p className="font-manrope text-[12px]">Submitted</p>
-                    </div>
-                    <p className="mt-2 font-manrope font-semibold text-[14px] text-white">
-                      {formatDate(data.createdAt)}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs uppercase tracking-[0.2em] text-[#8E94A4]">
+                      Applicant
                     </p>
 
-                    <p className="mt-2 font-manrope text-[12px] text-[#8E94A4]">
-                      Last updated: {formatDate(data.updatedAt)}
-                    </p>
+                    <h2 className="mt-1 truncate text-[22px] font-bold text-white">
+                      {safeText(data.fullName)}
+                    </h2>
+
+                    <div
+                      className="
+                        mt-3 inline-flex items-center gap-2
+                        rounded-full border border-white/10
+                        bg-white/[0.04]
+                        px-3 py-1.5
+                      "
+                    >
+                      <span
+                        className={clsx(
+                          "h-2 w-2 rounded-full",
+                          meta.dot
+                        )}
+                      />
+
+                      <span className="text-xs font-medium text-[#D7DBE4]">
+                        {meta.label}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="mt-5">
+                {/* Divider */}
+                <div className="my-6 h-px bg-white/10" />
+
+                {/* Customer Fields */}
+                <div className="space-y-4">
+                  <Field
+                    icon={<Mail className="w-4 h-4" />}
+                    label="Email Address"
+                    value={data.email}
+                  />
+
+                  <Field
+                    icon={<Phone className="w-4 h-4" />}
+                    label="Phone Number"
+                    value={data.contactPhone}
+                  />
+
+                  {/* Request ID */}
+                  <div className="rounded-2xl border border-white/10 bg-[#2d1f3f] p-4">
+                    <div className="flex items-center gap-2 text-[#8E94A4]">
+                      <Hash className="h-4 w-4" />
+
+                      <p className="text-[12px] font-medium">
+                        Request ID
+                      </p>
+                    </div>
+
+                    <div
+                      className="
+                        mt-3 rounded-xl border border-white/5
+                        bg-black/20 px-3 py-2
+                      "
+                    >
+                      <p className="break-all font-mono text-[12px] text-white">
+                        {data.id}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Submission */}
+                  <div className="rounded-2xl border border-white/10 bg-[#2d1f3f] p-4">
+                    <div className="flex items-center gap-2 text-[#8E94A4]">
+                      <Calendar className="h-4 w-4" />
+
+                      <p className="text-[12px] font-medium">
+                        Submission Details
+                      </p>
+                    </div>
+
+                    <div className="mt-4 space-y-3">
+                      <div>
+                        <p className="text-[11px] uppercase tracking-wide text-[#8E94A4]">
+                          Submitted At
+                        </p>
+
+                        <p className="mt-1 text-[14px] font-semibold text-white">
+                          {formatDate(data.createdAt)}
+                        </p>
+                      </div>
+
+                      <div className="h-px bg-white/10" />
+
+                      <div>
+                        <p className="text-[11px] uppercase tracking-wide text-[#8E94A4]">
+                          Last Updated
+                        </p>
+
+                        <p className="mt-1 text-[14px] font-semibold text-white">
+                          {formatDate(data.updatedAt)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="mt-6">
                   <Link
                     href="/dashboard/conversions"
-                    className="inline-flex items-center justify-center w-full rounded-full px-5 py-3 border border-white/10 text-white font-manrope font-semibold text-[14px] hover:bg-white/5 transition"
+                    className="
+                      inline-flex w-full items-center justify-center
+                      rounded-2xl border border-white/10
+                      bg-white/[0.03]
+                      px-5 py-3
+                      text-sm font-semibold text-white
+                      transition-all
+                      hover:border-white/20
+                      hover:bg-white/[0.06]
+                    "
                   >
-                    Back to list
+                    Back to Requests
                   </Link>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Right: details sections */}
-          <div className="lg:col-span-2 space-y-6">
+          {/* ================= RIGHT CONTENT ================= */}
+          <div className="space-y-6 lg:col-span-2">
             {/* Vehicle */}
-            <div className="rounded-2xl bg-[#251a34] border border-white/10 p-6 md:p-8 shadow-2xl">
-              <p className="font-manrope font-bold text-white text-[18px]">
+            <div className="rounded-3xl border border-white/10 bg-[#251a34] p-6 shadow-2xl md:p-8">
+              <p className="text-[18px] font-bold text-white">
                 Vehicle Details
               </p>
-              <p className="font-manrope text-[#8E94A4] text-[13px] mt-1">
-                Key information required to validate the conversion request.
+
+              <p className="mt-1 text-[13px] text-[#8E94A4]">
+                Key information required to validate
+                the conversion request.
               </p>
 
-              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
                 <Field
                   icon={<Car className="w-4 h-4" />}
                   label="Vehicle (Brand / Make)"
-                  value={`${safeText(data.brandOfVehicle)} • ${safeText(
+                  value={`${safeText(
+                    data.brandOfVehicle
+                  )} • ${safeText(
                     data.makeOfVehicle
                   )}`}
                 />
+
                 <Field
                   icon={<Hash className="w-4 h-4" />}
                   label="Registration No."
                   value={data.vehicleRegisterationNo}
                   mono
                 />
+
                 <Field
                   icon={<Calendar className="w-4 h-4" />}
                   label="Year"
                   value={data.yearOfManufacture}
                 />
+
                 <Field
                   icon={<Car className="w-4 h-4" />}
                   label="Color"
@@ -365,37 +487,42 @@ export default function ConversionDetailsPage() {
             </div>
 
             {/* Technical */}
-            <div className="rounded-2xl bg-[#251a34] border border-white/10 p-6 md:p-8 shadow-2xl">
-              <p className="font-manrope font-bold text-white text-[18px]">
+            <div className="rounded-3xl border border-white/10 bg-[#251a34] p-6 shadow-2xl md:p-8">
+              <p className="text-[18px] font-bold text-white">
                 Technical Snapshot
               </p>
 
-              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
                 <Field
                   icon={<Fuel className="w-4 h-4" />}
                   label="Fuel Type"
                   value={data.fuelType}
                 />
+
                 <Field
                   icon={<Cog className="w-4 h-4" />}
                   label="Transmission"
                   value={data.transmission}
                 />
+
                 <Field
                   icon={<Cog className="w-4 h-4" />}
                   label="Engine Condition"
                   value={data.engineCondition}
                 />
+
                 <Field
                   icon={<Gauge className="w-4 h-4" />}
                   label="Mileage"
                   value={data.mileage}
                 />
+
                 <Field
                   icon={<Cog className="w-4 h-4" />}
                   label="Engine Capacity"
                   value={data.engineCapacity}
                 />
+
                 <Field
                   icon={<Cog className="w-4 h-4" />}
                   label="Cylinders"
@@ -404,32 +531,35 @@ export default function ConversionDetailsPage() {
               </div>
             </div>
 
-            {/* Location/Route */}
-            <div className="rounded-2xl bg-[#251a34] border border-white/10 p-6 md:p-8 shadow-2xl">
-              <p className="font-manrope font-bold text-white text-[18px]">
+            {/* Location */}
+            <div className="rounded-3xl border border-white/10 bg-[#251a34] p-6 shadow-2xl md:p-8">
+              <p className="text-[18px] font-bold text-white">
                 Location & Usage
               </p>
 
-              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
                 <Field
                   icon={<MapPin className="w-4 h-4" />}
                   label="State / LGA"
-                  value={`${safeText(data.residentialState)} • ${safeText(
-                    data.lga
-                  )}`}
+                  value={`${safeText(
+                    data.residentialState
+                  )} • ${safeText(data.lga)}`}
                 />
+
                 <Field
                   icon={<MapPin className="w-4 h-4" />}
                   label="Address"
                   value={data.address}
                   multiline
                 />
+
                 <Field
                   icon={<MapPin className="w-4 h-4" />}
                   label="Usual Route"
                   value={data.usualRoute}
                   multiline
                 />
+
                 <Field
                   icon={<MapPin className="w-4 h-4" />}
                   label="Operating Motor Park"
@@ -440,18 +570,21 @@ export default function ConversionDetailsPage() {
 
             {/* Note */}
             {data.additionalNote && (
-              <div className="rounded-2xl bg-[#251a34] border border-white/10 p-6 md:p-8 shadow-2xl">
-                <p className="font-manrope font-bold text-white text-[18px]">
+              <div className="rounded-3xl border border-white/10 bg-[#251a34] p-6 shadow-2xl md:p-8">
+                <p className="text-[18px] font-bold text-white">
                   Additional Note
                 </p>
 
-                <div className="mt-4 rounded-2xl bg-[#2d1f3f] border border-white/10 p-4">
+                <div className="mt-4 rounded-2xl border border-white/10 bg-[#2d1f3f] p-4">
                   <div className="flex items-center gap-2 text-[#8E94A4]">
-                    <StickyNote className="w-4 h-4" />
-                    <p className="font-manrope text-[12px]">Applicant note</p>
+                    <StickyNote className="h-4 w-4" />
+
+                    <p className="text-[12px]">
+                      Applicant note
+                    </p>
                   </div>
 
-                  <p className="mt-2 font-manrope text-[14px] text-white whitespace-pre-wrap">
+                  <p className="mt-2 whitespace-pre-wrap text-[14px] text-white">
                     {data.additionalNote}
                   </p>
                 </div>
@@ -461,9 +594,10 @@ export default function ConversionDetailsPage() {
         </div>
       )}
 
+      {/* ================= EMPTY ================= */}
       {!loading && !data && !error && (
-        <div className="rounded-2xl bg-[#251a34] border border-white/10 p-8 shadow-2xl">
-          <p className="font-manrope text-[#8E94A4]">
+        <div className="rounded-3xl border border-white/10 bg-[#251a34] p-8 shadow-2xl">
+          <p className="text-[#8E94A4]">
             No data found for this conversion.
           </p>
         </div>

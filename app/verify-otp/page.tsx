@@ -3,7 +3,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { authApi, setAuthToken, setStationLoginType } from "@/lib/api";
+import { setAuthToken, setStationLoginType } from "@/lib/api/api-client";
+import { authApi } from "@/lib/api/auth/api";
 import { LoginType } from "@/enums/login-type.enum";
 
 const LOGIN_TYPE_LABEL: Record<LoginType, string> = {

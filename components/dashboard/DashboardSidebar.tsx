@@ -3,20 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
-import { Home, Car, Settings, User, X, LogOut } from "lucide-react";
-
-type NavItem = {
-  href: string;
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-};
-
-const NAV_ITEMS: NavItem[] = [
-  { href: "/dashboard", label: "Home", icon: Home },
-  { href: "/dashboard/conversions", label: "Conversions", icon: Car },
-  { href: "/dashboard/settings", label: "Settings", icon: Settings },
-  { href: "/dashboard/profile", label: "Profile", icon: User },
-];
+import { X, LogOut } from "lucide-react";
+import { useStationUI } from "@/lib/hooks/dashboard/useStationUi";
 
 export default function DashboardSidebar({
   onClose,
@@ -26,6 +14,7 @@ export default function DashboardSidebar({
   onLogout?: () => void;
 }) {
   const pathname = usePathname();
+  const { navItems, label , labels} = useStationUI();
 
   return (
     <aside
@@ -50,7 +39,7 @@ export default function DashboardSidebar({
                 PEPP Cruise
               </p>
               <p className="font-manrope text-[12px] text-[#8E94A4]">
-                CNG Conversion Admin
+                {label}
               </p>
             </div>
           </div>
@@ -76,8 +65,11 @@ export default function DashboardSidebar({
         </p>
 
         <div className="space-y-1">
-          {NAV_ITEMS.map((item) => {
-            const active = pathname === item.href;
+          {navItems.map((item) => {
+            const active =
+              item.href === "/dashboard"
+                ? pathname === "/dashboard"
+                : pathname === item.href || pathname.startsWith(item.href + "/");
             const Icon = item.icon;
 
             return (
@@ -116,13 +108,7 @@ export default function DashboardSidebar({
                     {item.label}
                   </p>
                   <p className="font-manrope text-[12px] text-white/40 truncate">
-                    {item.label === "Home"
-                      ? "Overview & insights"
-                      : item.label === "Conversions"
-                      ? "Manage requests"
-                      : item.label === "Settings"
-                      ? "Station updates"
-                      : "Your account"}
+                    {item.description}
                   </p>
                 </div>
               </Link>

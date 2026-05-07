@@ -3,20 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Home,
-  Car,
-  Settings,
   UserCircle2,
   Menu,
   LogOut,
 } from "lucide-react";
 import clsx from "clsx";
-
-const TOP_ITEMS = [
-  { href: "/dashboard", label: "Home", icon: Home },
-  { href: "/dashboard/conversions", label: "Conversions", icon: Car },
-  { href: "/dashboard/settings", label: "Settings", icon: Settings },
-];
+import { useStationUI } from "@/lib/hooks/dashboard/useStationUi";
 
 export default function DashboardTopbar({
   onOpenSidebar,
@@ -28,6 +20,12 @@ export default function DashboardTopbar({
   onLogout?: () => void;
 }) {
   const pathname = usePathname();
+  const { navItems, header } = useStationUI();
+
+  // 👇 remove profile from center nav
+  const centerNavItems = navItems.filter(
+    (item) => item.href !== "/dashboard/profile"
+  );
 
   return (
     <header className="sticky top-0 z-50 bg-[#11021f]/95 backdrop-blur-md border-b border-white/10">
@@ -47,18 +45,21 @@ export default function DashboardTopbar({
 
             <div className="hidden md:block min-w-0">
               <p className="font-manrope font-bold text-white leading-tight truncate">
-                Dashboard
+                {header.title}
               </p>
               <p className="font-manrope text-[12px] text-[#8E94A4] truncate">
-                Overview • conversions • operations
+                {header.subtitle}
               </p>
             </div>
           </div>
 
           {/* Center: icon-only navigation */}
           <nav className="flex items-center gap-2">
-            {TOP_ITEMS.map((item) => {
-              const active = pathname === item.href;
+            {centerNavItems.map((item) => {
+              const active =
+                item.href === "/dashboard"
+                  ? pathname === "/dashboard"
+                  : pathname === item.href || pathname.startsWith(item.href + "/");
               const Icon = item.icon;
 
               return (

@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 
 import { useStationApi } from "@/lib/hooks/stations/useStationApi";
-import { StatusFilterDropdown } from "@/components/dashboard/conversions/StatusFilterDropdown";
 import TableSkeleton from "@/components/dashboard/TableSkeleton";
 import CursorPagination from "@/components/dashboard/CursorPagination";
 import RequestsTable, {
@@ -21,16 +20,13 @@ import RequestsTable, {
 
 type StatusFilter = "all" | "approved" | "pending" | "rejected";
 
-interface Conversion {
+interface ChargingRequest {
   id: string;
   status: string;
   createdAt?: string;
-  applicantName?: string;
-  vehicleName?: string;
-  vehicleInfo?: any;
-  user?: any;
   fullName?: string;
-  brandOfVehicle?: string;
+  vehicleBrand?: string;
+  [key: string]: any;
 }
 
 /* ================= HELPERS ================= */
@@ -71,27 +67,6 @@ function safeText(v: unknown, fallback = "—") {
   return String(v);
 }
 
-function pickApplicantName(c: Conversion) {
-  return (
-    c.applicantName ||
-    c.fullName ||
-    c?.vehicleInfo?.applicantName ||
-    c?.user?.fullName ||
-    c?.user?.name ||
-    "—"
-  );
-}
-
-function pickVehicleName(c: Conversion) {
-  return (
-    c.vehicleName ||
-    c.brandOfVehicle ||
-    c?.vehicleInfo?.vehicleName ||
-    c?.vehicleInfo?.plateNumber ||
-    "—"
-  );
-}
-
 /* ================= STATUS PILL ================= */
 
 function StatusPill({ status }: { status: string }) {
@@ -128,11 +103,11 @@ function StatusPill({ status }: { status: string }) {
 
 /* ================= PAGE ================= */
 
-export default function ConversionsPage() {
+export default function ChargingRequestsPage() {
   const api = useStationApi();
   const router = useRouter();
 
-  const [conversions, setConversions] = useState<Conversion[]>([]);
+  const [list, setList] = useState<ChargingRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -147,8 +122,8 @@ export default function ConversionsPage() {
 
   /* ================= FETCH ================= */
 
-  const fetchConversions = useCallback(async () => {
-    if (!conversions.length) {
+  const fetchData = useCallback(async () => {
+    if (!list.length) {
       setLoading(true);
     }
 
@@ -161,40 +136,40 @@ export default function ConversionsPage() {
       });
 
       if (res.success && res.data) {
-        setConversions(res.data.data || []);
+        setList(res.data.data || []);
         setNextCursor(res.data.nextCursor || null);
       } else {
-        setError(res.message || "Failed to load conversions");
+        setError(res.message || "Failed to load requests");
       }
     } catch {
-      setError("An error occurred while loading conversions");
+      setError("Failed to load requests");
     } finally {
       setLoading(false);
     }
-  }, [cursor, api, conversions.length]);
+  }, [cursor, api, list.length]);
 
   useEffect(() => {
-    fetchConversions();
-  }, [fetchConversions]);
+    fetchData();
+  }, [fetchData]);
 
   /* ================= ROWS ================= */
 
   const rows = useMemo(() => {
     const filtered =
       statusFilter === "all"
-        ? conversions
-        : conversions.filter(
-            (c) => normalizeStatus(c.status) === statusFilter
+        ? list
+        : list.filter(
+            (i) => normalizeStatus(i.status) === statusFilter
           );
 
-    return filtered.map((c) => ({
-      id: c.id,
-      applicant: pickApplicantName(c),
-      vehicle: pickVehicleName(c),
-      status: c.status,
-      createdAt: c.createdAt,
+    return filtered.map((item) => ({
+      id: item.id,
+      applicant: safeText(item.fullName),
+      vehicle: safeText(item.vehicleBrand),
+      status: item.status,
+      createdAt: item.createdAt,
     }));
-  }, [conversions, statusFilter]);
+  }, [list, statusFilter]);
 
   /* ================= TABLE COLUMNS ================= */
 
@@ -269,7 +244,7 @@ export default function ConversionsPage() {
         >
           View Details
 
-          <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+          <ArrowUpRight className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
         </div>
       ),
     },
@@ -280,22 +255,17 @@ export default function ConversionsPage() {
   return (
     <div className="w-full">
       {/* ================= HEADER ================= */}
-      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-[30px] font-bold text-white">
-            Conversions
+            Charging Requests
           </h1>
 
           <p className="mt-1 text-sm text-[#8E94A4]">
-            Track and manage conversion requests assigned to
+            Track and manage charging requests assigned to
             your station.
           </p>
         </div>
-
-        <StatusFilterDropdown
-          value={statusFilter}
-          onChange={setStatusFilter}
-        />
       </div>
 
       {/* ================= ERROR ================= */}
@@ -316,9 +286,11 @@ export default function ConversionsPage() {
           skeleton={<TableSkeleton rows={6} columns={5} />}
           rowKey={(row) => row.id}
           onRowClick={(row) =>
-            router.push(`/dashboard/conversions/${row.id}`)
+            router.push(
+              `/dashboard/charging-requests/${row.id}`
+            )
           }
-          emptyTitle="No conversions found"
+          emptyTitle="No charging requests found"
           emptyDescription="Try changing filters or refreshing"
         />
       </div>

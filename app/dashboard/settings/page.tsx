@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { cngStationApi, stationProfileApi, getStationLoginType, stationSettingsApi } from "@/lib/api";
+import { getStationLoginType } from "@/lib/api/api-client";
 import LocationPicker from "@/components/dashboard/settings/LocationPicker";
 import { LoginType } from "@/enums/login-type.enum";
+import { useStationApi } from "@/lib/hooks/stations/useStationApi";
 
 /** -----------------------------
  * Types
@@ -184,6 +185,7 @@ function removeEmptyValues(
  * Page
  * ------------------------------*/
 export default function SettingsPage() {
+  const api = useStationApi();
   const [showModal, setShowModal] = useState(false);
 
   const [otp, setOtp] = useState("");
@@ -267,7 +269,7 @@ export default function SettingsPage() {
   const fetchStationProfile = useCallback(async () => {
     setError("");
     try {
-      const res = await stationProfileApi.getProfile();
+      const res = await api.getProfile();
 
       if (res.success && res.data) {
         // Your API might wrap data differently (res.data.data). If so, adjust:
@@ -343,7 +345,7 @@ export default function SettingsPage() {
     setError("");
 
     try {
-      const response = await stationSettingsApi.requestUpdate();
+      const response = await api.requestUpdate();
 
       if (response.success) {
         // ✅ toast above everything (z-index fixed)
@@ -395,7 +397,7 @@ export default function SettingsPage() {
     }
 
     try {
-      const response = await stationSettingsApi.updateWithOtp(otp, finalPatch);
+      const response = await api.updateWithOtp(otp, finalPatch);
 
       if (response.success) {
         showToast("success", "Station information updated successfully!");

@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { authApi } from "@/lib/api";
+import { authApi } from "@/lib/api/auth/api";
 import { LoginType } from "@/enums/login-type.enum";
 import clsx from "clsx";
 
