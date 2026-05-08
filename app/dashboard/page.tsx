@@ -225,7 +225,7 @@ export default function DashboardHomePage() {
                 <tr>
                   <td colSpan={3} className="py-10 text-center">
                     <p className="font-manrope text-[#8E94A4]">
-                      No conversions available yet.
+                      No {labels.conversions}available yet.
                     </p>
                   </td>
                 </tr>

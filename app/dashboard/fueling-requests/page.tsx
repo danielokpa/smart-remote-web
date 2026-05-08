@@ -174,7 +174,7 @@ export default function FuelingRequestsPage() {
 
     return filtered.map((item) => ({
       id: item.id,
-      customer: safeText(item.fullName),
+      customer: safeText(item.user.fullName),
       vehicle: safeText(item.vehicleBrand),
       plateNumber: safeText(item.vehiclePlateNumber),
       fuelAmount: item.requestedFuelAmount,

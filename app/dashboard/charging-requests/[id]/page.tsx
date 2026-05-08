@@ -27,32 +27,46 @@ import {
 import { useStationApi } from "@/lib/hooks/stations/useStationApi";
 
 /* ================= TYPES ================= */
-
 type ChargingRequestDetails = {
   id: string;
 
   stationId: string;
-  userId?: string;
+  userId: string;
 
+  // USER (JOINED FROM DB — KEEP THESE)
   fullName: string;
   email: string;
-  contactPhone: string;
+  phoneNo: string;
 
+  // VEHICLE
   vehicleModel: string;
   vehicleBrand: string;
   vehiclePlateNumber?: string;
 
+  // CHARGING
   batteryLevel: number;
   targetBatteryLevel?: number;
-
   scheduledAt?: string | Date;
   completedAt?: string | Date;
 
+  // TOKEN / PAYMENT
+  token: string;
+  amount: number;
+  sessionTime: number;
+  chargingDuration?: number;
+
+  monnifyPaymentReference?: string;
+  monnifyTransactionReference?: string;
+
+  isUsed: boolean;
+  timeUsed?: string | Date;
+
+  // STATUS / META
   status: string;
   note?: string;
 
-  createdAt: string | Date;
-  updatedAt: string | Date;
+  createdAt: string;
+  updatedAt: string;
 };
 
 /* ================= HELPERS ================= */
@@ -297,7 +311,7 @@ export default function ChargingRequestDetailsPage() {
 
                   <div>
                     <p className="text-lg font-bold text-white">
-                      {safeText(data.fullName)}
+                      {safeText((data as any)?.user?.fullName || "Unknow User")}
                     </p>
 
                     <p className="text-sm text-[#8E94A4]">
@@ -310,13 +324,13 @@ export default function ChargingRequestDetailsPage() {
                   <Field
                     icon={<Mail className="h-4 w-4" />}
                     label="Email"
-                    value={data.email}
+                    value={(data as any)?.user?.email}
                   />
 
                   <Field
                     icon={<Phone className="h-4 w-4" />}
                     label="Phone"
-                    value={data.contactPhone}
+                    value={(data as any)?.user?.phoneNo}
                   />
 
                   <Field
@@ -327,15 +341,10 @@ export default function ChargingRequestDetailsPage() {
                   />
 
                   <Field
-                    icon={<Calendar className="h-4 w-4" />}
-                    label="Submitted"
-                    value={formatDate(data.createdAt)}
-                  />
-
-                  <Field
-                    icon={<Clock3 className="h-4 w-4" />}
-                    label="Completed At"
-                    value={formatDate(data.completedAt)}
+                    icon={<Hash className="h-4 w-4" />}
+                    label="Token"
+                    value={data.token}
+                    mono
                   />
                 </div>
 
@@ -414,6 +423,44 @@ export default function ChargingRequestDetailsPage() {
                   label="Current Status"
                   value={data.status}
                 />
+                <Field
+                    icon={<Zap className="h-4 w-4" />}
+                    label="Amount"
+                    value={`₦${Number(data.amount ?? 0).toLocaleString()}`}
+                  />
+
+                  <Field
+                    icon={<Clock3 className="h-4 w-4" />}
+                    label="Session Time"
+                    value={`${data.sessionTime} mins`}
+                  />
+
+                  <Field
+                    icon={<Gauge className="h-4 w-4" />}
+                    label="Charging Duration"
+                    value={
+                      data.chargingDuration
+                        ? `${data.chargingDuration} mins`
+                        : "—"
+                    }
+                  />
+
+                  <Field
+                    icon={<Calendar className="h-4 w-4" />}
+                    label="Used At"
+                    value={formatDate(data.timeUsed)}
+                  />
+                  <Field
+                    icon={<Calendar className="h-4 w-4" />}
+                    label="Submitted"
+                    value={formatDate(data.createdAt)}
+                  />
+
+                  <Field
+                    icon={<Clock3 className="h-4 w-4" />}
+                    label="Completed At"
+                    value={formatDate(data.completedAt)}
+                  />
               </div>
             </div>
 

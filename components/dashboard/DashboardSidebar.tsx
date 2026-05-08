@@ -20,14 +20,14 @@ export default function DashboardSidebar({
     <aside
       className={clsx(
         "w-[280px] shrink-0",
-        "h-screen",
+        "h-dvh min-h-0",
         "bg-[#11021f] border-r border-white/10",
         "flex flex-col",
         "overflow-hidden" // ✅ prevents sidebar scroll
       )}
     >
       {/* Brand */}
-      <div className="px-5 py-5 border-b border-white/10">
+      <div className="px-5 py-4.5 border-b border-white/10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-xl bg-[#251a34] border border-white/10 flex items-center justify-center">
@@ -38,7 +38,7 @@ export default function DashboardSidebar({
               <p className="font-manrope font-bold text-white leading-tight">
                 PEPP Cruise
               </p>
-              <p className="font-manrope text-[12px] text-[#8E94A4]">
+              <p className="font-manrope text-[12px] text-[#8E94A4] leading-tight">
                 {label}
               </p>
             </div>
@@ -122,7 +122,7 @@ export default function DashboardSidebar({
         <div className="rounded-2xl bg-[#251a34] border border-white/10 p-3">
           <button
             type="button"
-            onClick={onLogout}
+            onClick={() => onLogout?.()}
             className="w-full flex items-center gap-3 rounded-xl px-3 py-3 hover:bg-white/5 transition"
           >
             <div className="w-10 h-10 rounded-xl bg-[#2d1f3f] border border-white/10 flex items-center justify-center">
