@@ -74,6 +74,9 @@ export default function TokenSalesPage() {
   const [cursor, setCursor] = useState<string | null>(null);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [prevStack, setPrevStack] = useState<string[]>([]);
+  const [payoutAmount, setPayoutAmount] = useState<number>(0);
+  const [payoutLoading, setPayoutLoading] = useState(false);
+  const [payoutMessage, setPayoutMessage] = useState("");
 
   const [statusFilter, setStatusFilter] =
     useState<StatusFilter>("all");
@@ -99,6 +102,28 @@ export default function TokenSalesPage() {
       setLoading(false);
     }
   }, [cursor, api]);
+
+  const requestPayout = async () => {
+    setPayoutLoading(true);
+    setPayoutMessage("");
+
+    try {
+      const res = await api.requestPayout?.(
+        payoutAmount,
+      );
+
+      if (res?.success) {
+        setPayoutMessage("Payout request submitted successfully.");
+        setPayoutAmount(0);
+      } else {
+        setPayoutMessage(res?.message || "Failed to request payout");
+      }
+    } catch {
+      setPayoutMessage("Failed to request payout");
+    } finally {
+      setPayoutLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchData();
@@ -149,6 +174,50 @@ export default function TokenSalesPage() {
           <RefreshCcw className="w-4 h-4" />
           Refresh
         </button>
+      </div>
+
+      {/* ================= PAYOUT REQUEST ================= */}
+      <div className="mb-6 rounded-2xl bg-[#251a34] border border-white/10 p-5 shadow-xl">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          
+          <div>
+            <h2 className="text-white text-lg font-bold">
+              Request Payout
+            </h2>
+            <p className="text-[#8E94A4] text-sm mt-1">
+              Withdraw from your total earnings ({formatCurrency(metrics.revenue)})
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <input
+              type="number"
+              value={payoutAmount}
+              onChange={(e) => setPayoutAmount(Number(e.target.value))}
+              placeholder="Enter amount"
+              className="px-4 py-2 rounded-full bg-black/30 border border-white/10 text-white text-sm outline-none"
+            />
+
+            <button
+              onClick={requestPayout}
+              disabled={
+                payoutLoading ||
+                payoutAmount <= 0 ||
+                payoutAmount > metrics.revenue
+              }
+              className="px-4 py-2 rounded-full bg-gradient-to-r from-[#762FB8] to-[#9B4DE0] text-white text-sm font-semibold disabled:opacity-50"
+            >
+              {payoutLoading ? "Processing..." : "Request"}
+            </button>
+          </div>
+        </div>
+
+        {/* message */}
+        {payoutMessage && (
+          <p className="text-sm mt-3 text-[#8E94A4]">
+            {payoutMessage}
+          </p>
+        )}
       </div>
 
       {/* ================= KPI CARDS ================= */}

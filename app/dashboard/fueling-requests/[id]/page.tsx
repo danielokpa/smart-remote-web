@@ -33,9 +33,24 @@ type FuelingRequestDetails = {
   stationId: string;
   userId?: string;
 
-  fullName: string;
-  email: string;
-  contactPhone: string;
+  /**
+   * user relation
+   */
+  user?: {
+    id?: string;
+    fullName?: string;
+    email?: string;
+    phoneNo?: string;
+    imageUrl?: string;
+  };
+
+  /**
+   * legacy snapshot fields
+   * optional because they may no longer exist
+   */
+  fullName?: string;
+  email?: string;
+  phoneNo?: string;
 
   vehiclePlateNumber: string;
   vehicleBrand: string;
@@ -46,6 +61,20 @@ type FuelingRequestDetails = {
 
   scheduledAt?: string | Date;
   completedAt?: string | Date;
+
+  /**
+   * token/payment fields
+   */
+  token?: string;
+  monnifyPaymentReference?: string;
+  monnifyTransactionReference?: string;
+
+  amount?: number;
+  sessionTime?: number;
+  chargingDuration?: number;
+
+  isUsed?: boolean;
+  timeUsed?: string | Date;
 
   status: string;
   note?: string;
@@ -282,7 +311,7 @@ export default function FuelingRequestDetailsPage() {
 
                 <div>
                   <p className="text-lg font-bold text-white">
-                    {data.fullName}
+                    {(data as any)?.user?.fullName}
                   </p>
 
                   <p className="text-sm text-[#8E94A4]">
@@ -295,13 +324,13 @@ export default function FuelingRequestDetailsPage() {
                 <Field
                   icon={<Mail className="h-4 w-4" />}
                   label="Email"
-                  value={data.email}
+                  value={(data as any)?.user?.email}
                 />
 
                 <Field
                   icon={<Phone className="h-4 w-4" />}
                   label="Phone"
-                  value={data.contactPhone}
+                  value={(data as any)?.user?.phoneNo}
                 />
 
                 <Field
@@ -384,6 +413,38 @@ export default function FuelingRequestDetailsPage() {
                   icon={<Clock3 className="h-4 w-4" />}
                   label="Completed At"
                   value={formatDate(data.completedAt)}
+                />
+
+                <Field
+                  icon={<Hash className="h-4 w-4" />}
+                  label="Token"
+                  value={data.token}
+                  mono
+                />
+
+                <Field
+                  icon={<Fuel className="h-4 w-4" />}
+                  label="Amount"
+                  value={`₦${data.amount?.toLocaleString() ?? "—"}`}
+                />
+
+                <Field
+                  icon={<Clock3 className="h-4 w-4" />}
+                  label="Session Time"
+                  value={
+                    data.sessionTime != null ? `${data.sessionTime} mins` : "—"
+                  }
+                />
+                <Field
+                  icon={<CheckCircle2 className="h-4 w-4" />}
+                  label="Used"
+                  value={data.isUsed ? "Yes" : "No"}
+                />
+
+                <Field
+                  icon={<Clock3 className="h-4 w-4" />}
+                  label="Time Used"
+                  value={formatDate(data.timeUsed)}
                 />
               </div>
             </div>

@@ -164,7 +164,7 @@ export default function ChargingRequestsPage() {
 
     return filtered.map((item) => ({
       id: item.id,
-      applicant: safeText(item.fullName),
+      applicant: safeText(item.user.fullName),
       vehicle: safeText(item.vehicleBrand),
       status: item.status,
       createdAt: item.createdAt,
