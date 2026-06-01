@@ -11,7 +11,7 @@ export const STATION_UI_CONFIG: Record<StationType, StationUIConfig> = {
     navItems: [
       { href: "/dashboard", label: "Home", icon: Home, description: "Overview & insights" },
       { href: "/dashboard/conversions", label: "Conversions", icon: Car, description: "View Conversion requests" },
-      { href: "/dashboard/tokens", label: "Wallet", icon: Wallet, description: "Manage Tokens" },
+      { href: "/dashboard/tokens", label: "Account", icon: Wallet, description: "My account" },
       { href: "/dashboard/settings", label: "Settings", icon: Settings, description: "Station Settings" },
       { href: "/dashboard/profile", label: "Profile", icon: UserCircle2, description: "Your Profile" },
     ],
@@ -36,7 +36,7 @@ export const STATION_UI_CONFIG: Record<StationType, StationUIConfig> = {
     navItems: [
       { href: "/dashboard", label: "Home", icon: Home, description: "Overview & insights", },
       { href: "/dashboard/charging-requests", label: "Charging Requests", icon: Zap, description: "View Charging sessions", },
-      { href: "/dashboard/tokens", label: "Wallet", icon: Wallet, description: "Manage Tokens", },
+      { href: "/dashboard/tokens", label: "Account", icon: Wallet, description: "My account", },
       { href: "/dashboard/settings", label: "Settings", icon: Settings, description: "Station Settings", },
       { href: "/dashboard/profile", label: "Profile", icon: UserCircle2, description: "Your Profile", },
     ],
@@ -61,7 +61,7 @@ export const STATION_UI_CONFIG: Record<StationType, StationUIConfig> = {
     navItems: [
       { href: "/dashboard", label: "Home", icon: Home, description: "Overview & insights", },
       { href: "/dashboard/fueling-requests", label: "Fueling Logs", icon: Car, description: "View Fueling Logs", },
-      { href: "/dashboard/tokens", label: "Wallet", icon: Wallet, description: "Manage Tokens", },
+      { href: "/dashboard/tokens", label: "Account", icon: Wallet, description: "My account", },
       { href: "/dashboard/settings", label: "Settings", icon: Settings, description: "Station Settings", },
       { href: "/dashboard/profile", label: "Profile", icon: UserCircle2, description: "Your Profile", },
     ],
