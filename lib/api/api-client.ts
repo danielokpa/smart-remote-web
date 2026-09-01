@@ -6,70 +6,38 @@
  * - Request/response parsing
  * - Error normalization
  */
+import { authStorage } from "@/lib/store/auth";
 
-import { LoginType } from "@/enums/login-type.enum";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") ?? "";
 
-/* -------------------------------------------------------------------------- */
-/*                               CONFIGURATION                                */
-/* -------------------------------------------------------------------------- */
-
-// ✅ FIXED: avoids "undefined/pepp-stations"
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
-  ? `${process.env.NEXT_PUBLIC_API_URL}/pepp-stations`
-  : "";
-
-/* -------------------------------------------------------------------------- */
-/*                                   TYPES                                    */
-/* -------------------------------------------------------------------------- */
-
-export interface ApiResponse<T = any> {
-  success: boolean;
+export interface ApiResponse<T = unknown> {
+  status: string;
+  statusCode: number;
   message: string;
   data: T | null;
-  statusCode: number;
 }
 
-/* -------------------------------------------------------------------------- */
-/*                            LOCAL STORAGE HELPERS                           */
-/* -------------------------------------------------------------------------- */
+export class ApiError extends Error {
+  statusCode: number;
+  data: unknown;
 
-const isBrowser = typeof window !== "undefined";
+  constructor(
+    message: string,
+    statusCode: number,
+    data: unknown = null
+  ) {
+    super(message);
 
-export const getAuthToken = (): string | null => {
-  if (!isBrowser) return null;
-  return localStorage.getItem("auth_token");
-};
+    this.name = "ApiError";
+    this.statusCode = statusCode;
+    this.data = data;
+  }
+}
 
-export const setAuthToken = (token: string): void => {
-  if (!isBrowser) return;
-  localStorage.setItem("auth_token", token);
-};
-
-export const removeAuthToken = (): void => {
-  if (!isBrowser) return;
-  localStorage.removeItem("auth_token");
-};
-
-export const getStationLoginType = (): LoginType | null => {
-  if (!isBrowser) return null;
-  return (localStorage.getItem("station_login_type") as LoginType) ?? null;
-};
-
-export const setStationLoginType = (type: LoginType): void => {
-  if (!isBrowser) return;
-  localStorage.setItem("station_login_type", type);
-};
-
-export const removeStationLoginType = (): void => {
-  if (!isBrowser) return;
-  localStorage.removeItem("station_login_type");
-};
-
-/* -------------------------------------------------------------------------- */
-/*                              RESPONSE PARSER                               */
-/* -------------------------------------------------------------------------- */
-
-const parseResponse = async <T>(response: Response): Promise<ApiResponse<T>> => {
+async function parseResponse<T>(
+  response: Response
+): Promise<ApiResponse<T>> {
   const statusCode = response.status;
 
   let json: any = null;
@@ -77,88 +45,72 @@ const parseResponse = async <T>(response: Response): Promise<ApiResponse<T>> => 
   try {
     json = await response.json();
   } catch {
-    return {
-      success: false,
-      message: "Invalid JSON response",
-      data: null,
-      statusCode,
-    };
+    throw new ApiError(
+      "The server returned an invalid response.",
+      statusCode
+    );
   }
 
-  // ✅ Dev-only logging
   if (process.env.NODE_ENV === "development") {
     console.log("API Response:", json);
   }
 
-  /**
-   * Expected backend format:
-   * { success: boolean, message: string, data?: T }
-   */
-  if (typeof json.success === "boolean") {
-    return {
-      success: json.success,
-      message: json.message || "",
-      data: json.data ?? null,
-      statusCode,
-    };
-  }
+  const message =
+    typeof json?.message === "string"
+      ? json.message
+      : Array.isArray(json?.message)
+        ? json.message.join(", ")
+        : "Something went wrong.";
 
-  /**
-   * Handle validation errors (422)
-   */
-  if (statusCode === 422 && json?.message) {
-    const message = Array.isArray(json.message)
-      ? json.message.join(", ")
-      : json.message;
+  const result: ApiResponse<T> = {
+    status:
+      typeof json?.status === "string"
+        ? json.status
+        : response.ok
+          ? "success"
+          : "error",
 
-    return {
-      success: false,
-      message,
-      data: null,
-      statusCode,
-    };
-  }
+    statusCode:
+      typeof json?.statusCode === "number"
+        ? json.statusCode
+        : statusCode,
 
-  /**
-   * Fallback (non-standard response)
-   */
-  return {
-    success: response.ok,
-    message:
-      json?.message ||
-      json?.error ||
-      (response.ok ? "Request successful" : "Request failed"),
-    data: json?.data ?? json ?? null,
-    statusCode,
+    message,
+
+    data: json?.data ?? null,
   };
-};
 
-/* -------------------------------------------------------------------------- */
-/*                              MAIN API REQUEST                              */
-/* -------------------------------------------------------------------------- */
+  if (!response.ok) {
+    throw new ApiError(
+      result.message,
+      result.statusCode,
+      result.data
+    );
+  }
 
-export const apiRequest = async <T = any>(
+  return result;
+}
+
+export async function apiRequest<T = unknown>(
   endpoint: string,
   options: RequestInit = {}
-): Promise<ApiResponse<T>> => {
-  const token = getAuthToken();
+): Promise<ApiResponse<T>> {
+  const token = authStorage.getToken();
 
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    ...(options.headers as Record<string, string>),
-  };
+  const headers = new Headers(options.headers);
+
+  headers.set("Content-Type", "application/json");
 
   if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
+    headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const url = API_BASE_URL ? `${API_BASE_URL}${endpoint}` : endpoint;
+  const url = `${API_BASE_URL}${endpoint}`;
 
-  // ✅ Dev-only request logging
   if (process.env.NODE_ENV === "development") {
     console.log("API Request:", {
       url,
-      method: options.method || "GET",
+      method: options.method ?? "GET",
       body: options.body,
     });
   }
@@ -169,25 +121,29 @@ export const apiRequest = async <T = any>(
       headers,
     });
 
-    // 🔐 Handle unauthorized globally
     if (response.status === 401) {
-      removeAuthToken();
+      authStorage.clearSession();
 
-      if (isBrowser) {
-        window.location.href = "/login";
+      if (typeof window !== "undefined") {
+        const currentPath = window.location.pathname;
+
+        if (currentPath !== "/login") {
+          window.location.href = "/login";
+        }
       }
     }
 
     return await parseResponse<T>(response);
   } catch (error) {
-    return {
-      success: false,
-      message:
-        error instanceof Error
-          ? error.message
-          : "Network error occurred",
-      data: null,
-      statusCode: 0,
-    };
+    if (error instanceof ApiError) {
+      throw error;
+    }
+
+    throw new ApiError(
+      error instanceof Error
+        ? error.message
+        : "Unable to connect to the server.",
+      0
+    );
   }
-};
+}

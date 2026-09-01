@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { QueryProvider } from "@/components/providers/QueryProvider";
 import Script from "next/script";
 import "./globals.css";
 
@@ -36,7 +37,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[--color-background]  text-[--color-foreground] no-scrollbar`}
       
       >
-        {children}
+        <QueryProvider>
+          {children}
+        </QueryProvider>
         
         {/* Google Maps API */}
         <Script
