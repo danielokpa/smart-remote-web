@@ -6,6 +6,10 @@ const AUTH_USER_KEY = "remote_care_auth_user";
 const isBrowser = typeof window !== "undefined";
 
 export const authStorage = {
+  /* ---------------------------------------------------------------------- */
+  /* TOKEN                                                                  */
+  /* ---------------------------------------------------------------------- */
+
   getToken(): string | null {
     if (!isBrowser) return null;
 
@@ -23,6 +27,10 @@ export const authStorage = {
 
     localStorage.removeItem(AUTH_TOKEN_KEY);
   },
+
+  /* ---------------------------------------------------------------------- */
+  /* USER                                                                   */
+  /* ---------------------------------------------------------------------- */
 
   getUser(): AuthUser | null {
     if (!isBrowser) return null;
@@ -44,7 +52,7 @@ export const authStorage = {
     localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
   },
 
-  getUserType() {
+  getUserType(): AuthUser["userType"] | null {
     return this.getUser()?.userType ?? null;
   },
 
@@ -54,6 +62,10 @@ export const authStorage = {
     localStorage.removeItem(AUTH_USER_KEY);
   },
 
+  /* ---------------------------------------------------------------------- */
+  /* SESSION                                                                */
+  /* ---------------------------------------------------------------------- */
+
   setSession(user: AuthUser): void {
     this.setToken(user.token);
     this.setUser(user);
@@ -62,5 +74,13 @@ export const authStorage = {
   clearSession(): void {
     this.removeToken();
     this.removeUser();
+  },
+
+  /* ---------------------------------------------------------------------- */
+  /* AUTH CHECK                                                             */
+  /* ---------------------------------------------------------------------- */
+
+  isAuthenticated(): boolean {
+    return Boolean(this.getToken());
   },
 };

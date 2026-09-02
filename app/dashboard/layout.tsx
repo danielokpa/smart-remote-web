@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import ProtectedRoute from "@/components/ProtectedRoute";
 import { usePathname, useRouter } from "next/navigation";
-import { removeAuthToken, removeStationLoginType } from "@/lib/api/api-client";
 
+import ProtectedRoute from "@/components/ProtectedRoute";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import DashboardTopbar from "@/components/dashboard/DashboardTopbar";
+
+import { authStorage } from "@/lib/store/auth";
 
 export default function DashboardLayout({
   children,
@@ -18,39 +19,68 @@ export default function DashboardLayout({
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // refs for click-outside (mobile drawer + open button)
+  /* ---------------------------------------------------------------------- */
+  /* REFS                                                                   */
+  /* ---------------------------------------------------------------------- */
+
   const drawerRef = useRef<HTMLDivElement | null>(null);
   const openBtnRef = useRef<HTMLButtonElement | null>(null);
 
+  /* ---------------------------------------------------------------------- */
+  /* LOGOUT                                                                 */
+  /* ---------------------------------------------------------------------- */
+
   const handleLogout = () => {
-    removeStationLoginType();
-    removeAuthToken();
+    authStorage.clearSession();
+
     setSidebarOpen(false);
-    router.push("/login");
+
+    router.replace("/");
   };
 
-  // Close on route change
+  /* ---------------------------------------------------------------------- */
+  /* CLOSE DRAWER ON ROUTE CHANGE                                           */
+  /* ---------------------------------------------------------------------- */
+
   useEffect(() => {
     setSidebarOpen(false);
   }, [pathname]);
 
-  // Close on ESC
+  /* ---------------------------------------------------------------------- */
+  /* CLOSE ON ESC                                                           */
+  /* ---------------------------------------------------------------------- */
+
   useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setSidebarOpen(false);
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setSidebarOpen(false);
+      }
     };
-    if (sidebarOpen) window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+
+    if (sidebarOpen) {
+      window.addEventListener("keydown", onKeyDown);
+    }
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+    };
   }, [sidebarOpen]);
 
-  // Close when clicking outside (mobile)
+  /* ---------------------------------------------------------------------- */
+  /* CLOSE WHEN CLICKING OUTSIDE MOBILE DRAWER                              */
+  /* ---------------------------------------------------------------------- */
+
   useEffect(() => {
     const handler = (event: MouseEvent | TouchEvent) => {
       if (!sidebarOpen) return;
 
       const target = event.target as Node;
-      const clickedDrawer = drawerRef.current?.contains(target);
-      const clickedButton = openBtnRef.current?.contains(target);
+
+      const clickedDrawer =
+        drawerRef.current?.contains(target);
+
+      const clickedButton =
+        openBtnRef.current?.contains(target);
 
       if (!clickedDrawer && !clickedButton) {
         setSidebarOpen(false);
@@ -66,51 +96,66 @@ export default function DashboardLayout({
     };
   }, [sidebarOpen]);
 
-  // Prevent background scroll only when drawer open (mobile)
+  /* ---------------------------------------------------------------------- */
+  /* PREVENT BACKGROUND SCROLL WHEN MOBILE DRAWER IS OPEN                  */
+  /* ---------------------------------------------------------------------- */
+
   useEffect(() => {
-    document.body.style.overflow = sidebarOpen ? "hidden" : "";
+    document.body.style.overflow = sidebarOpen
+      ? "hidden"
+      : "";
+
     return () => {
       document.body.style.overflow = "";
     };
   }, [sidebarOpen]);
 
-  // ✅ LOCK PAGE SCROLL FOR DASHBOARD (so browser scrollbar won't appear)
-  // NOTE: deps array MUST be constant. Keep it as [].
+  /* ---------------------------------------------------------------------- */
+  /* LOCK OUTER PAGE SCROLL                                                 */
+  /* ---------------------------------------------------------------------- */
+
   useEffect(() => {
     const html = document.documentElement;
     const body = document.body;
 
-    const prevHtmlOverflow = html.style.overflow;
-    const prevBodyOverflow = body.style.overflow;
+    const previousHtmlOverflow = html.style.overflow;
+    const previousBodyOverflow = body.style.overflow;
 
     html.style.overflow = "hidden";
     body.style.overflow = "hidden";
 
     return () => {
-      html.style.overflow = prevHtmlOverflow;
-      body.style.overflow = prevBodyOverflow;
+      html.style.overflow = previousHtmlOverflow;
+      body.style.overflow = previousBodyOverflow;
     };
   }, []);
 
+  /* ---------------------------------------------------------------------- */
+  /* UI                                                                      */
+  /* ---------------------------------------------------------------------- */
+
   return (
     <ProtectedRoute>
-      {/* full viewport shell; no body scroll */}
-      <div className="h-[100dvh] bg-[#11021f] text-white overflow-hidden">
+      <div className="h-[100dvh] bg-[#071A17] text-white overflow-hidden">
         <div className="flex h-full">
+
           {/* Desktop sidebar */}
           <div className="hidden lg:block h-full">
-            <DashboardSidebar onLogout={handleLogout} />
+            <DashboardSidebar
+              onLogout={handleLogout}
+            />
           </div>
 
           {/* Main column */}
           <div className="flex-1 min-w-0 flex flex-col h-full">
+
             <DashboardTopbar
               onOpenSidebar={() => setSidebarOpen(true)}
               menuButtonRef={openBtnRef}
               onLogout={handleLogout}
             />
 
-            {/* ✅ ONLY THIS SCROLLS + scrollbar hidden */}
+            {/* Scrollable dashboard content */}
             <main className="flex-1 overflow-y-auto no-scrollbar px-4 md:px-6 py-6">
               {children}
             </main>
@@ -121,24 +166,31 @@ export default function DashboardLayout({
         <div
           className={[
             "lg:hidden fixed inset-0 z-[80]",
-            sidebarOpen ? "pointer-events-auto" : "pointer-events-none",
+            sidebarOpen
+              ? "pointer-events-auto"
+              : "pointer-events-none",
           ].join(" ")}
           aria-hidden={!sidebarOpen}
         >
-          {/* subtle backdrop */}
+          {/* Backdrop */}
           <div
             className={[
-              "absolute inset-0 transition-opacity",
-              sidebarOpen ? "opacity-100 bg-black/30" : "opacity-0 bg-black/0",
+              "absolute inset-0 transition-opacity duration-200",
+              sidebarOpen
+                ? "opacity-100 bg-black/40"
+                : "opacity-0 bg-black/0",
             ].join(" ")}
           />
 
-          {/* drawer */}
+          {/* Drawer */}
           <div
             ref={drawerRef}
             className={[
-              "absolute left-0 top-0 h-full transition-transform duration-200",
-              sidebarOpen ? "translate-x-0" : "-translate-x-full",
+              "absolute left-0 top-0 h-full",
+              "transition-transform duration-200",
+              sidebarOpen
+                ? "translate-x-0"
+                : "-translate-x-full",
             ].join(" ")}
           >
             <DashboardSidebar

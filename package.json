@@ -12,6 +12,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.102.8",
+    "@tanstack/react-query-devtools": "^5.102.8",
     "classnames": "^2.5.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.24",

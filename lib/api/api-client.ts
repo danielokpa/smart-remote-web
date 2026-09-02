@@ -1,15 +1,27 @@
 /**
- * API Client
- * Handles:
- * - Auth token
- * - Base URL
- * - Request/response parsing
- * - Error normalization
+ * Remote Care API Client
+ *
+ * Responsibilities:
+ * - API base URL
+ * - Authentication headers
+ * - Request execution
+ * - Response parsing
+ * - API error normalization
+ * - Session cleanup on unauthorized responses
  */
+
 import { authStorage } from "@/lib/store/auth";
+
+/* -------------------------------------------------------------------------- */
+/*                               CONFIGURATION                                */
+/* -------------------------------------------------------------------------- */
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") ?? "";
+
+/* -------------------------------------------------------------------------- */
+/*                                   TYPES                                    */
+/* -------------------------------------------------------------------------- */
 
 export interface ApiResponse<T = unknown> {
   status: string;
@@ -17,6 +29,10 @@ export interface ApiResponse<T = unknown> {
   message: string;
   data: T | null;
 }
+
+/* -------------------------------------------------------------------------- */
+/*                                 API ERROR                                  */
+/* -------------------------------------------------------------------------- */
 
 export class ApiError extends Error {
   statusCode: number;
@@ -34,6 +50,10 @@ export class ApiError extends Error {
     this.data = data;
   }
 }
+
+/* -------------------------------------------------------------------------- */
+/*                              RESPONSE PARSER                               */
+/* -------------------------------------------------------------------------- */
 
 async function parseResponse<T>(
   response: Response
@@ -91,6 +111,10 @@ async function parseResponse<T>(
   return result;
 }
 
+/* -------------------------------------------------------------------------- */
+/*                              MAIN API REQUEST                              */
+/* -------------------------------------------------------------------------- */
+
 export async function apiRequest<T = unknown>(
   endpoint: string,
   options: RequestInit = {}
@@ -121,16 +145,14 @@ export async function apiRequest<T = unknown>(
       headers,
     });
 
+    /**
+     * The token is no longer valid.
+     *
+     * Clear the local session here, but don't perform
+     * navigation from the API layer.
+     */
     if (response.status === 401) {
       authStorage.clearSession();
-
-      if (typeof window !== "undefined") {
-        const currentPath = window.location.pathname;
-
-        if (currentPath !== "/login") {
-          window.location.href = "/login";
-        }
-      }
     }
 
     return await parseResponse<T>(response);

@@ -3,64 +3,75 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
-import { X, LogOut } from "lucide-react";
-import { useStationUI } from "@/lib/hooks/dashboard/useStationUi";
+import { HeartPulse, LogOut, X } from "lucide-react";
+
+import { useRemoteCareUI } from "@/lib/hooks/dashboard/useDashboardUi";
+
+interface DashboardSidebarProps {
+  onClose?: () => void;
+  onLogout?: () => void;
+}
 
 export default function DashboardSidebar({
   onClose,
   onLogout,
-}: {
-  onClose?: () => void; // used only in mobile drawer
-  onLogout?: () => void;
-}) {
+}: DashboardSidebarProps) {
   const pathname = usePathname();
-  const { navItems, label , labels} = useStationUI();
+
+  const {
+    navItems,
+    label,
+  } = useRemoteCareUI();
 
   return (
     <aside
       className={clsx(
         "w-[280px] shrink-0",
         "h-dvh min-h-0",
-        "bg-[#11021f] border-r border-white/10",
+        "bg-[#071A17]",
+        "border-r border-white/10",
         "flex flex-col",
-        "overflow-hidden" // ✅ prevents sidebar scroll
+        "overflow-hidden"
       )}
     >
       {/* Brand */}
-      <div className="px-5 py-4.5 border-b border-white/10">
+      <div className="border-b border-white/10 px-5 py-4.5">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-[#251a34] border border-white/10 flex items-center justify-center">
-              <span className="font-manrope font-bold text-white">P</span>
+          <div className="flex min-w-0 items-center gap-3">
+            {/* Logo */}
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#2DD4BF]/20 bg-[#0E2723]">
+              <HeartPulse className="h-5 w-5 text-[#2DD4BF]" />
             </div>
 
-            <div>
-              <p className="font-manrope font-bold text-white leading-tight">
-                PEPP Cruise
+            {/* Brand text */}
+            <div className="min-w-0">
+              <p className="truncate font-manrope font-bold leading-tight text-white">
+                Remote Care
               </p>
-              <p className="font-manrope text-[12px] text-[#8E94A4] leading-tight">
+
+              <p className="truncate font-manrope text-[12px] leading-tight text-[#8FA8A2]">
                 {label}
               </p>
             </div>
           </div>
 
-          {/* Mobile close (only visible inside drawer) */}
+          {/* Mobile close */}
           {onClose && (
             <button
               type="button"
               onClick={onClose}
-              className="lg:hidden w-10 h-10 rounded-full border border-white/10 hover:bg-white/5 flex items-center justify-center"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 transition hover:bg-white/5 lg:hidden"
               aria-label="Close sidebar"
             >
-              <X className="w-5 h-5" />
+              <X className="h-5 w-5 text-white" />
             </button>
           )}
         </div>
       </div>
 
-      {/* Nav (no scroll) */}
-      <nav className="px-3 py-4">
-        <p className="px-3 pb-2 font-manrope text-[12px] text-[#8E94A4] uppercase tracking-wider">
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto px-3 py-4 no-scrollbar">
+        <p className="px-3 pb-2 font-manrope text-[11px] font-semibold uppercase tracking-[0.12em] text-[#6F8982]">
           Navigation
         </p>
 
@@ -69,7 +80,9 @@ export default function DashboardSidebar({
             const active =
               item.href === "/dashboard"
                 ? pathname === "/dashboard"
-                : pathname === item.href || pathname.startsWith(item.href + "/");
+                : pathname === item.href ||
+                  pathname.startsWith(`${item.href}/`);
+
             const Icon = item.icon;
 
             return (
@@ -78,62 +91,81 @@ export default function DashboardSidebar({
                 href={item.href}
                 onClick={onClose}
                 className={clsx(
-                  "group flex items-center gap-3 rounded-2xl px-3 py-3 transition",
+                  "group flex items-center gap-3 rounded-2xl px-3 py-3",
+                  "border transition-all duration-200",
                   active
-                    ? "bg-white/8 border border-white/10"
-                    : "hover:bg-white/5"
+                    ? "border-[#2DD4BF]/15 bg-[#0E2723]"
+                    : "border-transparent hover:border-white/5 hover:bg-white/[0.035]"
                 )}
               >
+                {/* Icon */}
                 <div
                   className={clsx(
-                    "w-10 h-10 rounded-xl border border-white/10 flex items-center justify-center",
-                    active ? "bg-[#251a34]" : "bg-[#251a34]/60"
+                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition",
+                    active
+                      ? "border-[#2DD4BF]/20 bg-[#12352F]"
+                      : "border-white/10 bg-white/[0.025] group-hover:bg-white/[0.05]"
                   )}
                 >
                   <Icon
                     className={clsx(
-                      "w-5 h-5",
-                      active ? "text-white" : "text-[#8E94A4] group-hover:text-white"
+                      "h-5 w-5 transition",
+                      active
+                        ? "text-[#2DD4BF]"
+                        : "text-[#718A84] group-hover:text-white"
                     )}
                   />
                 </div>
 
+                {/* Text */}
                 <div className="min-w-0">
                   <p
                     className={clsx(
-                      "font-manrope font-semibold text-[14px] truncate",
-                      active ? "text-white" : "text-[#8E94A4] group-hover:text-white"
+                      "truncate font-manrope text-[14px] font-semibold",
+                      active
+                        ? "text-white"
+                        : "text-[#9BAEA9] group-hover:text-white"
                     )}
                   >
                     {item.label}
                   </p>
-                  <p className="font-manrope text-[12px] text-white/40 truncate">
-                    {item.description}
-                  </p>
+
+                  {item.description && (
+                    <p className="truncate font-manrope text-[12px] text-white/35">
+                      {item.description}
+                    </p>
+                  )}
                 </div>
+
+                {/* Active indicator */}
+                {active && (
+                  <div className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-[#2DD4BF]" />
+                )}
               </Link>
             );
           })}
         </div>
       </nav>
 
-      {/* Footer pinned to bottom */}
+      {/* Footer */}
       <div className="mt-auto px-3 pb-5">
-        <div className="rounded-2xl bg-[#251a34] border border-white/10 p-3">
+        <div className="rounded-2xl border border-white/10 bg-[#0E2723] p-2">
           <button
             type="button"
-            onClick={() => onLogout?.()}
-            className="w-full flex items-center gap-3 rounded-xl px-3 py-3 hover:bg-white/5 transition"
+            onClick={onLogout}
+            className="group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-white/5"
           >
-            <div className="w-10 h-10 rounded-xl bg-[#2d1f3f] border border-white/10 flex items-center justify-center">
-              <LogOut className="w-5 h-5 text-[#8E94A4]" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.025]">
+              <LogOut className="h-5 w-5 text-[#718A84] transition group-hover:text-[#F87171]" />
             </div>
-            <div className="text-left">
-              <p className="font-manrope font-semibold text-[14px] text-white">
-                Logout
+
+            <div className="min-w-0">
+              <p className="font-manrope text-[14px] font-semibold text-white">
+                Sign out
               </p>
-              <p className="font-manrope text-[12px] text-[#8E94A4]">
-                Sign out securely
+
+              <p className="font-manrope text-[12px] text-[#718A84]">
+                End your secure session
               </p>
             </div>
           </button>

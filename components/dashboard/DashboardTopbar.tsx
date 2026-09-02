@@ -3,106 +3,108 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  UserCircle2,
-  Menu,
+  Activity,
   LogOut,
+  Menu,
+  UserCircle2,
 } from "lucide-react";
-import clsx from "clsx";
-import { useStationUI } from "@/lib/hooks/dashboard/useStationUi";
+
+import { authStorage } from "@/lib/store/auth";
+import { useRemoteCareUI } from "@/lib/hooks/dashboard/useDashboardUi";
+
+interface DashboardTopbarProps {
+  onOpenSidebar?: () => void;
+  menuButtonRef?: React.RefObject<HTMLButtonElement | null>;
+  onLogout?: () => void;
+}
 
 export default function DashboardTopbar({
   onOpenSidebar,
   menuButtonRef,
   onLogout,
-}: {
-  onOpenSidebar?: () => void;
-  menuButtonRef?: React.RefObject<HTMLButtonElement | null>;
-  onLogout?: () => void;
-}) {
+}: DashboardTopbarProps) {
   const pathname = usePathname();
-  const { navItems, header } = useStationUI();
 
-  // 👇 remove profile from center nav
-  const centerNavItems = navItems.filter(
-    (item) => item.href !== "/dashboard/profile"
-  );
+  const { header } = useRemoteCareUI();
+
+  const user = authStorage.getUser();
+
+  const userType = user?.userType ?? "";
+
+  const roleLabel =
+    userType.charAt(0) +
+    userType.slice(1).toLowerCase();
 
   return (
-    <header className="sticky top-0 z-50 bg-[#11021f]/95 backdrop-blur-md border-b border-white/10">
-      <div className="px-4 md:px-6 py-4">
-        <div className="flex items-center justify-between gap-3">
-          {/* Left: mobile menu + heading */}
-          <div className="flex items-center gap-3 min-w-0">
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-[#071A17]/95 backdrop-blur-md">
+      <div className="px-4 py-3.5 md:px-6">
+        <div className="flex items-center justify-between gap-4">
+          {/* Left */}
+          <div className="flex min-w-0 items-center gap-3">
+            {/* Mobile menu */}
             <button
               ref={menuButtonRef}
               type="button"
               onClick={onOpenSidebar}
-              className="lg:hidden w-10 h-10 rounded-full border border-white/10 hover:bg-white/5 flex items-center justify-center transition"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 transition hover:bg-white/5 lg:hidden"
               aria-label="Open sidebar"
             >
-              <Menu className="w-5 h-5 text-white" />
+              <Menu className="h-5 w-5 text-white" />
             </button>
 
-            <div className="hidden md:block min-w-0">
-              <p className="font-manrope font-bold text-white leading-tight truncate">
-                {header.title}
-              </p>
-              <p className="font-manrope text-[12px] text-[#8E94A4] truncate">
+            {/* Context */}
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <Activity className="hidden h-4 w-4 text-[#2DD4BF] sm:block" />
+
+                <p className="truncate font-manrope text-[15px] font-bold text-white">
+                  {header.title}
+                </p>
+              </div>
+
+              <p className="truncate font-manrope text-[12px] text-[#718A84]">
                 {header.subtitle}
               </p>
             </div>
           </div>
 
-          {/* Center: icon-only navigation */}
-          <nav className="flex items-center gap-2">
-            {centerNavItems.map((item) => {
-              const active =
-                item.href === "/dashboard"
-                  ? pathname === "/dashboard"
-                  : pathname === item.href || pathname.startsWith(item.href + "/");
-              const Icon = item.icon;
+          {/* Right */}
+          <div className="flex shrink-0 items-center gap-2">
+            {/* Role badge */}
+            {roleLabel && (
+              <div className="hidden items-center gap-2 rounded-full border border-[#2DD4BF]/15 bg-[#0E2723] px-3 py-2 sm:flex">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#2DD4BF]" />
 
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-label={item.label}
-                  title={item.label}
-                  className={clsx(
-                    "w-10 h-10 rounded-full border flex items-center justify-center transition",
-                    active
-                      ? "border-white/15 bg-white/5"
-                      : "border-white/10 hover:bg-white/5"
-                  )}
-                >
-                  <Icon
-                    className={clsx(
-                      "w-5 h-5",
-                      active ? "text-white" : "text-[#8E94A4]"
-                    )}
-                  />
-                </Link>
-              );
-            })}
-          </nav>
+                <span className="font-manrope text-[12px] font-semibold text-[#A8BCB7]">
+                  {roleLabel}
+                </span>
+              </div>
+            )}
 
-          {/* Right: profile + logout */}
-          <div className="flex items-center gap-2">
+            {/* Profile */}
             <Link
               href="/dashboard/profile"
-              className="w-10 h-10 rounded-full border border-white/10 hover:bg-white/5 flex items-center justify-center transition"
+              className={[
+                "flex h-10 w-10 items-center justify-center rounded-full",
+                "border border-white/10",
+                "transition hover:bg-white/5",
+                pathname === "/dashboard/profile"
+                  ? "bg-white/5"
+                  : "",
+              ].join(" ")}
               aria-label="Profile"
               title="Profile"
             >
-              <UserCircle2 className="w-6 h-6 text-white" />
+              <UserCircle2 className="h-5 w-5 text-white" />
             </Link>
 
             {/* Desktop logout */}
             <button
               type="button"
               onClick={onLogout}
-              className="hidden sm:inline-flex px-4 py-2 rounded-full border border-white/10 text-white font-manrope font-semibold text-[14px] hover:bg-white/5 transition"
+              className="hidden items-center gap-2 rounded-full border border-white/10 px-4 py-2 font-manrope text-[13px] font-semibold text-white transition hover:bg-white/5 sm:inline-flex"
             >
+              <LogOut className="h-4 w-4 text-[#8FA8A2]" />
               Logout
             </button>
 
@@ -110,11 +112,11 @@ export default function DashboardTopbar({
             <button
               type="button"
               onClick={onLogout}
-              className="sm:hidden w-10 h-10 rounded-full border border-white/10 hover:bg-white/5 flex items-center justify-center transition"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 transition hover:bg-white/5 sm:hidden"
               aria-label="Logout"
               title="Logout"
             >
-              <LogOut className="w-5 h-5 text-white" />
+              <LogOut className="h-5 w-5 text-white" />
             </button>
           </div>
         </div>

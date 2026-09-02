@@ -3,6 +3,7 @@ import {
 } from "@/lib/api/api-client";
 
 import type {
+  AuthUser,
   LoginRequest,
   LoginResponse,
 } from "../../types/auth/types";

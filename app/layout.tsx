@@ -1,26 +1,40 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { QueryProvider } from "@/components/providers/QueryProvider";
+import { Manrope } from "next/font/google";
 import Script from "next/script";
+
+import { QueryProvider } from "@/components/providers/QueryProvider";
+
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const manrope = Manrope({
+  variable: "--font-manrope",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "PEPP Cruise",
-  description: "Powering Movement with Clean Energy",
+  title: {
+    default: "Remote Care",
+    template: "%s | Remote Care",
+  },
+
+  description:
+    "Smart remote patient monitoring and healthcare management platform.",
+
+  applicationName: "Remote Care",
+
+  keywords: [
+    "Remote Care",
+    "remote patient monitoring",
+    "healthcare monitoring",
+    "patient monitoring",
+    "healthcare management",
+  ],
+
   icons: {
-    icon: '/images/pepp_cruise_p_logo.webp',
-    shortcut: '/images/pepp_cruise_p_logo.webp',
-    apple: '/images/pepp_cruise_p_logo.webp',
+    icon: "/images/remote-care-logo.png",
+    shortcut: "/images/remote-care-logo.png",
+    apple: "/images/remote-care-logo.png",
   },
 };
 
@@ -30,17 +44,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    
     <html lang="en">
       <body
-      
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[--color-background]  text-[--color-foreground] no-scrollbar`}
-      
+        className={`${manrope.variable} antialiased bg-[#071A17] text-white no-scrollbar`}
       >
         <QueryProvider>
           {children}
         </QueryProvider>
-        
+
         {/* Google Maps API */}
         <Script
           id="google-maps-script"
@@ -49,6 +60,5 @@ export default function RootLayout({
         />
       </body>
     </html>
-    
   );
 }
