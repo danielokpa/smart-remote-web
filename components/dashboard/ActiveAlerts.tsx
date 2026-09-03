@@ -129,8 +129,9 @@ export default function ActiveAlerts({
                     <div className="mt-1 flex items-center justify-between gap-3">
                       <p className="truncate font-manrope text-[10px] text-[#91A0AA]">
                         Patient:{" "}
-                        {alert.patient?.name ??
-                          alert.patientId.slice(0, 8)}
+                          {alert.patient
+                            ? `${alert.patient.firstName} ${alert.patient.lastName}`
+                            : alert.patientId.slice(0, 8)}
                       </p>
 
                       <p className="shrink-0 font-manrope text-[9px] text-[#A7B1B7]">
