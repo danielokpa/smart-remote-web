@@ -9,7 +9,7 @@ import {
 
 import Link from "next/link";
 
-import type { Alert } from "@/lib/api/alerts/types";
+import type { Alert } from "@/lib/types/alerts/types";
 
 interface ActiveAlertsProps {
   alerts: Alert[];
