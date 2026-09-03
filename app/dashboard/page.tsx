@@ -18,8 +18,7 @@ import { useAuth } from "@/lib/hooks/auth/useAuth";
 
 export default function DashboardPage() {
   const {
-    patients,
-    devices,
+    metrics,
     readings,
     activeAlerts,
     isLoading,
@@ -29,13 +28,8 @@ export default function DashboardPage() {
 
   const { user } = useAuth();
 
-  const activeDevices = devices.filter(
-    (device) => device.status === "ACTIVE"
-  );
-
   return (
     <div className="w-full">
-
       <DashboardHeader
         userName={
           user?.email
@@ -45,19 +39,23 @@ export default function DashboardPage() {
         userType={user?.userType}
       />
 
+      {/* ================================================================
+          ERROR STATE
+      ================================================================ */}
+
       {isError && (
-        <div className="mb-6 rounded-2xl border border-[#F0D2D2] bg-[#FFF7F7] px-4 py-3.5">
+        <div className="mb-6 rounded-2xl border border-red-400/10 bg-red-400/5 px-4 py-3.5">
           <div className="flex items-start gap-3">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#FDEEEE]">
-              <AlertTriangle className="h-3.5 w-3.5 text-[#DC4C4C]" />
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-red-400/10">
+              <AlertTriangle className="h-3.5 w-3.5 text-red-400" />
             </div>
 
             <div>
-              <p className="font-manrope text-[12px] font-bold text-[#A63C3C]">
-                Unable to load some dashboard data
+              <p className="font-manrope text-[12px] font-bold text-red-300">
+                Unable to load dashboard data
               </p>
 
-              <p className="mt-0.5 font-manrope text-[10px] text-[#B46A6A]">
+              <p className="mt-0.5 font-manrope text-[10px] text-red-300/70">
                 {error instanceof Error
                   ? error.message
                   : "Please refresh the page and try again."}
@@ -67,18 +65,17 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* =============================================================== */}
-      {/* STATISTICS                                                       */}
-      {/* =============================================================== */}
+      {/* ================================================================
+          STATISTICS
+      ================================================================ */}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-
         <DashboardStatCard
           title="Total patients"
           value={
             isLoading
               ? "…"
-              : patients.length
+              : metrics.totalPatients
           }
           subtitle="Registered patients"
           tone="blue"
@@ -92,15 +89,15 @@ export default function DashboardPage() {
           value={
             isLoading
               ? "…"
-              : activeAlerts.length
+              : metrics.activeAlerts
           }
           subtitle={
-            activeAlerts.length > 0
+            !isLoading && metrics.activeAlerts > 0
               ? "Requires attention"
               : "No active alerts"
           }
           tone={
-            activeAlerts.length > 0
+            !isLoading && metrics.activeAlerts > 0
               ? "danger"
               : "teal"
           }
@@ -114,13 +111,9 @@ export default function DashboardPage() {
           value={
             isLoading
               ? "…"
-              : activeDevices.length
+              : metrics.activeDevices
           }
-          subtitle={
-            isLoading
-              ? "Loading device status"
-              : `${devices.length} total devices`
-          }
+          subtitle="Currently monitoring patients"
           tone="teal"
           icon={
             <Cpu className="h-5 w-5" />
@@ -132,23 +125,21 @@ export default function DashboardPage() {
           value={
             isLoading
               ? "…"
-              : readings.length
+              : metrics.healthReadings
           }
-          subtitle="Retrieved monitoring data"
+          subtitle="Recorded health readings"
           tone="blue"
           icon={
             <HeartPulse className="h-5 w-5" />
           }
         />
-
       </div>
 
-      {/* =============================================================== */}
-      {/* MONITORING + ALERTS                                             */}
-      {/* =============================================================== */}
+      {/* ================================================================
+          MONITORING + ACTIVE ALERTS
+      ================================================================ */}
 
       <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[1.35fr_0.65fr]">
-
         <MonitoringOverview
           readings={readings}
           loading={isLoading}
@@ -158,12 +149,11 @@ export default function DashboardPage() {
           alerts={activeAlerts}
           loading={isLoading}
         />
-
       </div>
 
-      {/* =============================================================== */}
-      {/* RECENT READINGS                                                 */}
-      {/* =============================================================== */}
+      {/* ================================================================
+          RECENT READINGS
+      ================================================================ */}
 
       <div className="mt-6">
         <RecentReadings
@@ -171,7 +161,6 @@ export default function DashboardPage() {
           loading={isLoading}
         />
       </div>
-
     </div>
   );
 }

@@ -3,6 +3,7 @@ import {
   Bell,
   CalendarDays,
   ClipboardList,
+  Cpu,
   LayoutDashboard,
   Settings,
   Stethoscope,
@@ -119,6 +120,12 @@ export const DASHBOARD_UI_CONFIG: Record<
         href: "/dashboard/reports",
         description: "Healthcare reports",
         icon: ClipboardList,
+      },
+      {
+        label: "Devices",
+        href: "/dashboard/devices",
+        description: "Monitoring devices",
+        icon: Cpu,
       },
       {
         label: "Settings",
