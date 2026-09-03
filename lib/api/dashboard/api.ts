@@ -1,4 +1,5 @@
 import { apiRequest } from "@/lib/api/api-client";
+import type { AlertStatus } from "@/lib/types/alerts/types";
 
 export interface DashboardMetrics {
   totalPatients: number;
@@ -28,7 +29,7 @@ export interface DashboardAlert {
   readingId: string;
   parameter: string;
   value: number;
-  status: string;
+  status: AlertStatus;
   createdAt: string;
   patient: DashboardPatient;
 }
