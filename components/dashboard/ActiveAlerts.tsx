@@ -9,10 +9,10 @@ import {
 
 import Link from "next/link";
 
-import type { Alert } from "@/lib/types/alerts/types";
+import type { DashboardAlert } from "@/lib/api/dashboard/api";
 
 interface ActiveAlertsProps {
-  alerts: Alert[];
+  alerts: DashboardAlert[];
   loading?: boolean;
 }
 
