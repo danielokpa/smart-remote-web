@@ -9,10 +9,10 @@ import {
 
 import Link from "next/link";
 
-import type { HealthReading } from "@/lib/api/readings/types";
+import type { DashboardReading } from "@/lib/api/dashboard/api";
 
 interface RecentReadingsProps {
-  readings: HealthReading[];
+  readings: DashboardReading[];
   loading?: boolean;
 }
 
@@ -113,8 +113,9 @@ export default function RecentReadings({
                   <td className="px-3 py-3.5">
                     <div>
                       <p className="font-manrope text-[12px] font-bold text-[#344D5D]">
-                        {reading.patient?.name ??
-                          reading.patientId.slice(0, 8)}
+                        reading.patient
+                          ? `${reading.patient.firstName} ${reading.patient.lastName}`
+                          : reading.patientId.slice(0, 8)
                       </p>
 
                       <p className="mt-0.5 font-manrope text-[9px] text-[#A0ACB3]">
