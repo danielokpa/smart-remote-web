@@ -7,7 +7,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 
-import type { HealthReading } from "@/lib/api/readings/types";
+import type { HealthReading } from "@/lib/types/readings/types";
 
 interface MonitoringOverviewProps {
   readings: HealthReading[];
