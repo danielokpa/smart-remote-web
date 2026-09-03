@@ -7,15 +7,15 @@ import {
   TrendingUp,
 } from "lucide-react";
 
-import type { HealthReading } from "@/lib/types/readings/types";
+import type { DashboardReading } from "@/lib/api/dashboard/api";
 
 interface MonitoringOverviewProps {
-  readings: HealthReading[];
+  readings: DashboardReading[];
   loading?: boolean;
 }
 
 function getLatestReading(
-  readings: HealthReading[]
+  readings: DashboardReading[]
 ) {
   if (!readings.length) return null;
 
