@@ -25,15 +25,12 @@ import { useDevices } from "@/lib/hooks/devices/useDevices";
 import { useCreateHealthReading } from "@/lib/hooks/readings/useReadings";
 
 import {
-  HEALTH_AGE_GROUPS,
   HEALTH_CONDITION_OPTIONS,
   getHealthSimulationRange,
+  getAgeGroupFromAge,
 } from "@/lib/data/health-simulation";
 
-import {
-  getAgeGroupFromAge,
-  generateHealthReading,
-} from "@/lib/utils/health-simulation";
+import { generateHealthReading } from "@/lib/utils/health-simulation";
 
 import type {
   HealthCondition,
@@ -401,7 +398,9 @@ export default function PatientDevicesPage() {
 
                   <p className="mt-0.5 text-sm text-[#8FA8A2]">
                     Age {age}
-                    {ageGroup ? ` • ${ageGroup.label}` : ""}
+                    {ageGroupDefinition
+                        ? ` • ${ageGroupDefinition.label}`
+                        : ""}
                   </p>
                 </div>
               </div>

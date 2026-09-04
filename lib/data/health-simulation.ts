@@ -343,3 +343,34 @@ export function getAgeGroupFromAge(
 
   return ageGroup.value;
 }
+
+/**
+ * Returns the simulation range for a specific health condition
+ * and patient age group.
+ *
+ * These values are intended for application simulation/testing
+ * only and must not be interpreted as clinical thresholds.
+ */
+export function getHealthSimulationRange(
+  condition: HealthCondition,
+  ageGroup: AgeGroup
+): HealthSimulationRange {
+  const conditionRanges =
+    HEALTH_SIMULATION_RANGES[condition];
+
+  if (!conditionRanges) {
+    throw new Error(
+      `No simulation ranges found for condition: ${condition}.`
+    );
+  }
+
+  const range = conditionRanges[ageGroup];
+
+  if (!range) {
+    throw new Error(
+      `No simulation range found for condition ${condition} and age group ${ageGroup}.`
+    );
+  }
+
+  return range;
+}
