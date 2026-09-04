@@ -28,6 +28,7 @@ import {
   HEALTH_CONDITION_OPTIONS,
   getHealthSimulationRange,
   getAgeGroupFromAge,
+  HEALTH_AGE_GROUPS,
 } from "@/lib/data/health-simulation";
 
 import { generateHealthReading } from "@/lib/utils/health-simulation";
@@ -200,8 +201,18 @@ export default function PatientDevicesPage() {
   }, [patient?.dateOfBirth]);
 
   const ageGroup = useMemo(() => {
+    if (!age) return null;
+
     return getAgeGroupFromAge(age);
-  }, [age]);
+    }, [age]);
+
+    const ageGroupDefinition = useMemo(() => {
+    if (!ageGroup) return null;
+
+    return HEALTH_AGE_GROUPS.find(
+        (group) => group.value === ageGroup
+    ) ?? null;
+    }, [ageGroup]);
 
   const selectedDevice = useMemo(
     () =>
@@ -219,14 +230,18 @@ export default function PatientDevicesPage() {
     [selectedCondition]
   );
 
-  const simulationRange: HealthSimulationRange | null = useMemo(() => {
+  const simulationRange = useMemo(() => {
     if (!ageGroup) return null;
 
-    return getHealthSimulationRange(
-      selectedCondition,
-      ageGroup
-    );
-  }, [selectedCondition, ageGroup]);
+    try {
+        return getHealthSimulationRange(
+        selectedCondition,
+        ageGroup
+        );
+    } catch {
+        return null;
+    }
+    }, [selectedCondition, ageGroup]);
 
   const ConditionIcon = getConditionIcon(selectedCondition);
 
