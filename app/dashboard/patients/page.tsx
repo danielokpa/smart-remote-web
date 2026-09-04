@@ -95,6 +95,7 @@ interface PatientCardProps {
     id: string;
     firstName: string;
     lastName: string;
+    email: string;
     dateOfBirth: string;
     gender: string;
     contact: string;
@@ -134,6 +135,10 @@ function PatientCard({
             </p>
 
             <p className="mt-0.5 truncate font-manrope text-[11px] text-[#8FA8A2]">
+              {patient.email}
+            </p>
+
+            <p className="mt-0.5 truncate font-manrope text-[10px] text-[#8FA8A2]/70">
               {patient.contact}
             </p>
           </div>
@@ -849,13 +854,17 @@ export default function PatientsPage() {
           {!isError && (
             <>
               <div className="hidden md:block">
-                <div className="grid grid-cols-[minmax(220px,1.7fr)_1fr_1.2fr_1fr_40px] items-center gap-4 border-b border-white/[0.06] bg-white/[0.015] px-5 py-3">
+                <div className="grid grid-cols-[minmax(220px,1.7fr)_1.2fr_1.4fr_1fr_1fr_40px] items-center gap-4 border-b border-white/[0.06] bg-white/[0.015] px-5 py-3">
                   <TableHeading>
                     Patient
                   </TableHeading>
 
                   <TableHeading>
                     Date of birth
+                  </TableHeading>
+
+                  <TableHeading>
+                    Email
                   </TableHeading>
 
                   <TableHeading>
@@ -894,7 +903,7 @@ export default function PatientsPage() {
                             patient.id
                           )
                         }
-                        className="group grid w-full grid-cols-[minmax(220px,1.7fr)_1fr_1.2fr_1fr_40px] items-center gap-4 border-b border-white/[0.06] px-5 py-4 text-left transition-colors last:border-b-0 hover:bg-white/[0.025]"
+                        className="group grid w-full grid-cols-[minmax(220px,1.7fr)_1.2fr_1.4fr_1fr_1fr_40px] items-center gap-4 border-b border-white/[0.06] px-5 py-4 text-left transition-colors last:border-b-0 hover:bg-white/[0.025]"
                       >
                         {/* Patient */}
                         <div className="flex min-w-0 items-center gap-3">
@@ -931,6 +940,13 @@ export default function PatientsPage() {
                             {formatDate(
                               patient.dateOfBirth
                             )}
+                          </span>
+                        </div>
+
+                        {/* Email */}
+                        <div className="min-w-0">
+                          <span className="block truncate font-manrope text-[10px] font-medium text-[#D5E2DE]">
+                            {patient.email}
                           </span>
                         </div>
 

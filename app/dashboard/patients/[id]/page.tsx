@@ -12,7 +12,8 @@ import {
   Cpu,
   Heart,
   HeartPulse,
-  Loader2,
+  // Loader2,
+  Mail,
   Phone,
   RefreshCw,
   ShieldAlert,
@@ -1027,6 +1028,11 @@ export default function PatientDetailsPage() {
                 </p>
 
                 <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+                  <span className="inline-flex min-w-0 items-center gap-1.5 font-manrope text-[9px] text-[#8FA8A2]">
+                    <Mail className="h-3 w-3 shrink-0 text-[#8FA8A2]/60" />
+                    <span className="truncate">{patient.email}</span>
+                  </span>
+
                   <span className="inline-flex items-center gap-1.5 font-manrope text-[9px] text-[#8FA8A2]">
                     <Phone className="h-3 w-3 text-[#8FA8A2]/60" />
                     {patient.contact}
@@ -1059,13 +1065,21 @@ export default function PatientDetailsPage() {
           </div>
 
           {/* Patient details */}
-          <div className="relative mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <div className="relative mt-6 grid grid-cols-2 gap-3 lg:grid-cols-5">
             <PatientInfoItem
               icon={
                 <UserRound className="h-3 w-3" />
               }
               label="Full name"
               value={fullName}
+            />
+
+            <PatientInfoItem
+              icon={
+                <Mail className="h-3 w-3" />
+              }
+              label="Email"
+              value={patient.email}
             />
 
             <PatientInfoItem
