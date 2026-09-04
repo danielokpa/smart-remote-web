@@ -16,3 +16,17 @@ export interface HealthReading {
     deviceName: string;
   };
 }
+
+export interface CreateHealthReadingPayload {
+  patientId: string;
+  deviceId: string;
+  heartRate: number;
+  temperature: number;
+}
+
+export interface HealthReadingResponse {
+  status: string;
+  statusCode: number;
+  message: string;
+  data: HealthReading;
+}

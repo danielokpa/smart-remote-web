@@ -194,4 +194,22 @@ export const devicesApi = {
 
     return response.data;
   },
+
+  getAvailable: async (): Promise<DevicesListResponse> => {
+    const response =
+      await apiRequest<DevicesListResponse>(
+        "/devices",
+        {
+          method: "GET",
+        }
+      );
+
+    if (!response.data) {
+      throw new Error(
+        "Devices data was not returned."
+      );
+    }
+
+    return response.data;
+  },
 };

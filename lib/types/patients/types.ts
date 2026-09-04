@@ -33,6 +33,11 @@
 //     maxTemperature: number;
 //   };
 // }
+export type PatientAlertStatus =
+  | "ACTIVE"
+  | "RESOLVED"
+  | "DISMISSED"
+  | string;
 
 export interface Patient {
   id: string;
@@ -49,6 +54,7 @@ export interface Patient {
 export interface RegisterPatientPayload {
   firstName: string;
   lastName: string;
+  email: string;
   dateOfBirth: string;
   gender: string;
   contact: string;

@@ -47,7 +47,7 @@ export function usePatientLogin() {
         patient: patient.patient,
       });
 
-      router.replace("/dashboard");
+      router.replace("/patient/dashboard");
     },
   });
 }

@@ -273,3 +273,36 @@ export function useDevices(
       devicesQuery.refetch,
   };
 }
+
+export function useAvailableDevices() {
+  const query = useQuery({
+    queryKey: ["devices", "available"],
+
+    queryFn: () => devicesApi.getAvailable(),
+
+    staleTime: 60 * 1000,
+
+    refetchOnWindowFocus: true,
+  });
+
+  return {
+    devices: query.data?.items ?? [],
+
+    pagination:
+      query.data?.pagination ?? {
+        limit: 20,
+        hasNextPage: false,
+        nextCursor: null,
+      },
+
+    isLoading: query.isLoading,
+
+    isFetching: query.isFetching,
+
+    isError: query.isError,
+
+    error: query.error,
+
+    refetch: query.refetch,
+  };
+}

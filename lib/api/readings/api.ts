@@ -1,5 +1,5 @@
 import { apiRequest } from "@/lib/api/api-client";
-import type { HealthReading } from "../../types/readings/types";
+import type { HealthReading, CreateHealthReadingPayload } from "../../types/readings/types";
 
 export const readingsApi = {
   getAll: async (
@@ -48,6 +48,33 @@ export const readingsApi = {
     return extractList<HealthReading>(
       response.data
     );
+  },
+
+   /* Submit a health reading for the authenticated patient.
+   *
+   * The patientId is included in the request payload because
+   * that is what the backend endpoint currently expects.
+   *
+   * Authorization is automatically attached by apiRequest().
+   */
+  create: async (
+    payload: CreateHealthReadingPayload
+  ): Promise<HealthReading> => {
+    const response = await apiRequest<HealthReading>(
+      "/readings",
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }
+    );
+
+    if (!response.data) {
+      throw new Error(
+        "Health reading data was not returned."
+      );
+    }
+
+    return response.data;
   },
 };
 

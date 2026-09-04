@@ -53,6 +53,10 @@ export const DASHBOARD_UI_CONFIG: Record<
   UserType,
   DashboardUIConfig
 > = {
+  /* -------------------------------------------------------------------------- */
+  /* ADMIN                                                                      */
+  /* -------------------------------------------------------------------------- */
+
   ADMIN: {
     label: "Administration",
 
@@ -136,6 +140,10 @@ export const DASHBOARD_UI_CONFIG: Record<
     ],
   },
 
+  /* -------------------------------------------------------------------------- */
+  /* DOCTOR                                                                     */
+  /* -------------------------------------------------------------------------- */
+
   DOCTOR: {
     label: "Clinical Care",
 
@@ -213,6 +221,10 @@ export const DASHBOARD_UI_CONFIG: Record<
     ],
   },
 
+  /* -------------------------------------------------------------------------- */
+  /* NURSE                                                                      */
+  /* -------------------------------------------------------------------------- */
+
   NURSE: {
     label: "Nursing Care",
 
@@ -285,6 +297,81 @@ export const DASHBOARD_UI_CONFIG: Record<
         label: "Profile",
         href: "/dashboard/profile",
         description: "Your professional profile",
+        icon: UserCircle2,
+      },
+    ],
+  },
+
+  /* -------------------------------------------------------------------------- */
+  /* PATIENT                                                                     */
+  /* -------------------------------------------------------------------------- */
+
+  PATIENT: {
+    label: "Patient Portal",
+
+    header: {
+      title: "Remote Care",
+      subtitle: "Personal health monitoring",
+    },
+
+    title: "My Health",
+
+    description:
+      "View your latest health information, monitoring updates, and alerts.",
+
+    stats: {
+      showPatients: false,
+      showDoctors: false,
+      showNurses: false,
+      showAlerts: true,
+    },
+
+    quickActions: [
+      {
+        key: "monitoring",
+        title: "Health Monitoring",
+        description:
+          "View your latest health readings and monitoring data.",
+        href: "/dashboard/monitoring",
+      },
+      {
+        key: "alerts",
+        title: "Health Alerts",
+        description:
+          "Review important alerts related to your health.",
+        href: "/dashboard/alerts",
+      },
+    ],
+
+    navItems: [
+      {
+        label: "Dashboard",
+        href: "/dashboard",
+        description: "Your health overview",
+        icon: LayoutDashboard,
+      },
+      {
+        label: "My Health",
+        href: "/dashboard/monitoring",
+        description: "Your health readings",
+        icon: Activity,
+      },
+      {
+        label: "Appointments",
+        href: "/dashboard/appointments",
+        description: "Your appointments",
+        icon: CalendarDays,
+      },
+      {
+        label: "Alerts",
+        href: "/dashboard/alerts",
+        description: "Your health alerts",
+        icon: Bell,
+      },
+      {
+        label: "Profile",
+        href: "/dashboard/profile",
+        description: "Your patient profile",
         icon: UserCircle2,
       },
     ],

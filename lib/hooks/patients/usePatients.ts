@@ -190,3 +190,111 @@ export function usePatients(
       patientsQuery.refetch,
   };
 }
+/*
+ * ============================================================================
+ * Patient Dashboard
+ * ============================================================================
+ */
+
+export const patientDashboardKeys = {
+  all: ["patient-dashboard"] as const,
+
+  summaries: () =>
+    [...patientDashboardKeys.all, "summary"] as const,
+
+  summary: () =>
+    [...patientDashboardKeys.summaries(), "me"] as const,
+};
+
+const PATIENT_DASHBOARD_REFRESH_INTERVAL =
+  30 * 1000;
+
+export function usePatientDashboard() {
+  /*
+   * Patient dashboard summary
+   *
+   * The patient ID is intentionally NOT passed to the API.
+   *
+   * The backend identifies the authenticated patient from
+   * the JWT supplied by the API client.
+   */
+  const patientDashboardQuery = useQuery({
+    queryKey:
+      patientDashboardKeys.summary(),
+
+    queryFn: () =>
+      patientsApi.getMySummary(),
+
+    staleTime:
+      15 * 1000,
+
+    refetchInterval:
+      PATIENT_DASHBOARD_REFRESH_INTERVAL,
+
+    refetchOnWindowFocus: true,
+  });
+
+  return {
+    /*
+     * Complete patient summary
+     */
+    summary:
+      patientDashboardQuery.data ?? null,
+
+    /*
+     * Patient profile
+     */
+    patient:
+      patientDashboardQuery.data ?? null,
+
+    /*
+     * Health readings
+     */
+    readings:
+      patientDashboardQuery.data?.readings ?? [],
+
+    /*
+     * All alerts
+     */
+    alerts:
+      patientDashboardQuery.data?.alerts ?? [],
+
+    /*
+     * Most recent health reading
+     */
+    latestReading:
+      patientDashboardQuery.data?.latestReading ?? null,
+
+    /*
+     * Currently active alerts
+     */
+    activeAlerts:
+      patientDashboardQuery.data?.activeAlerts ?? [],
+
+    /*
+     * Query state
+     */
+    isLoading:
+      patientDashboardQuery.isLoading,
+
+    isFetching:
+      patientDashboardQuery.isFetching,
+
+    isError:
+      patientDashboardQuery.isError,
+
+    error:
+      patientDashboardQuery.error,
+
+    /*
+     * Raw query instance
+     */
+    patientDashboardQuery,
+
+    /*
+     * Manual refresh
+     */
+    refetch:
+      patientDashboardQuery.refetch,
+  };
+}

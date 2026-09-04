@@ -58,3 +58,11 @@ export interface DevicesListResponse {
 /* -------------------------------------------------------------------------- */
 
 export type DeleteDeviceResponse = boolean;
+
+
+
+export interface GetDevicesParams {
+  cursor?: string;
+  limit?: number;
+  search?: string;
+}
