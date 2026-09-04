@@ -514,6 +514,21 @@ export default function LoginPage() {
                 </div>
 
                 {/* Footer */}
+                {/* Patient portal link */}
+                <div className="mt-7 border-t border-[#DCE7EE] pt-6 text-center">
+                  <p className="text-[11px] text-[#91A0AA]">
+                    Are you a patient?
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={() => router.push("/patient/login")}
+                    className="mt-2 inline-flex items-center gap-1.5 font-manrope text-[12px] font-bold text-[#16A6A1] transition-colors hover:text-[#126F6B]"
+                  >
+                    Sign in to the Patient Portal
+                    <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                  </button>
+                </div>
                 <p className="mt-8 text-center text-[11px] text-[#91A0AA]">
                   RemoteCare Smart Health Monitoring System
                 </p>
