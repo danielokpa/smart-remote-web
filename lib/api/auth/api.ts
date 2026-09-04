@@ -6,6 +6,8 @@ import type {
   AuthUser,
   LoginRequest,
   LoginResponse,
+  PatientLoginRequest,
+  PatientLoginResponse,
 } from "../../types/auth/types";
 
 export const authApi = {
@@ -19,6 +21,21 @@ export const authApi = {
         body: JSON.stringify(credentials),
       }
     );
+
+    return {
+      status: response.status,
+      statusCode: response.statusCode,
+      message: response.message,
+      data: response.data!,
+    };
+  },
+  patientLogin: async (payload: PatientLoginRequest): Promise<PatientLoginResponse> => {
+    const response = await apiRequest<PatientLoginResponse["data"]>(
+      "/auth/patient", 
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
 
     return {
       status: response.status,
