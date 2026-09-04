@@ -4,6 +4,7 @@ import {
   CalendarDays,
   ClipboardList,
   Cpu,
+  HeartPulse,
   LayoutDashboard,
   Settings,
   Stethoscope,
@@ -303,7 +304,7 @@ export const DASHBOARD_UI_CONFIG: Record<
   },
 
   /* -------------------------------------------------------------------------- */
-  /* PATIENT                                                                     */
+  /* PATIENT                                                                    */
   /* -------------------------------------------------------------------------- */
 
   PATIENT: {
@@ -328,6 +329,13 @@ export const DASHBOARD_UI_CONFIG: Record<
 
     quickActions: [
       {
+        key: "take-reading",
+        title: "Take Health Reading",
+        description:
+          "Use an active monitoring device to submit your latest health reading.",
+        href: "/patient/dashboard/devices",
+      },
+      {
         key: "monitoring",
         title: "Health Monitoring",
         description:
@@ -346,9 +354,15 @@ export const DASHBOARD_UI_CONFIG: Record<
     navItems: [
       {
         label: "Dashboard",
-        href: "/dashboard",
+        href: "/patient/dashboard",
         description: "Your health overview",
         icon: LayoutDashboard,
+      },
+      {
+        label: "Take Reading",
+        href: "/patient/dashboard/devices",
+        description: "Take and submit a health reading",
+        icon: HeartPulse,
       },
       {
         label: "My Health",

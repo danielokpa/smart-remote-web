@@ -36,7 +36,7 @@ export default function DashboardTopbar({
     userType.slice(1).toLowerCase();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-[#071A17]/95 backdrop-blur-md">
+    <header className="sticky top-0 z-50 h-19 border-b border-white/10 bg-[#071A17]/95 backdrop-blur-md">
       <div className="px-4 py-3.5 md:px-6">
         <div className="flex items-center justify-between gap-4">
           {/* Left */}
