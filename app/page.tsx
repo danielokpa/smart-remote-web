@@ -523,7 +523,7 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => router.push("/patient/login")}
-                    className="mt-2 inline-flex items-center gap-1.5 font-manrope text-[12px] font-bold text-[#16A6A1] transition-colors hover:text-[#126F6B]"
+                    className="mt-2 inline-flex items-center gap-1.5 font-manrope text-[12px] font-bold text-[#16A6A1] transition-colors hover:text-[#126F6B] cursor-pointer"
                   >
                     Sign in to the Patient Portal
                     <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />

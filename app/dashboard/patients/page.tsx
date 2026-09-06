@@ -197,6 +197,7 @@ function RegisterPatientModal({
     useState<RegisterPatientPayload>({
       firstName: "",
       lastName: "",
+      email: "",
       dateOfBirth: "",
       gender: "",
       contact: "",
@@ -210,6 +211,7 @@ function RegisterPatientModal({
       setForm({
         firstName: "",
         lastName: "",
+        email: "",
         dateOfBirth: "",
         gender: "",
         contact: "",
@@ -244,12 +246,14 @@ function RegisterPatientModal({
 
     const firstName = form.firstName.trim();
     const lastName = form.lastName.trim();
+    const email = form.email.trim().toLowerCase();
     const gender = form.gender.trim();
     const contact = form.contact.trim();
 
     if (
       !firstName ||
       !lastName ||
+      !email ||
       !form.dateOfBirth ||
       !gender ||
       !contact
@@ -260,10 +264,16 @@ function RegisterPatientModal({
       return;
     }
 
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setFormError("Please enter a valid email address.");
+      return;
+    }
+
     try {
       await onSubmit({
         firstName,
         lastName,
+        email,
         dateOfBirth: form.dateOfBirth,
         gender,
         contact,
@@ -391,6 +401,29 @@ function RegisterPatientModal({
               />
             </FormField>
           </div>
+
+          {/* Email */}
+          <FormField
+            label="Email address"
+            required
+            hint="This email will be used for patient login."
+          >
+            <input
+              type="email"
+              value={form.email}
+              onChange={(event) =>
+                updateField(
+                  "email",
+                  event.target.value
+                )
+              }
+              placeholder="patient@example.com"
+              disabled={isSubmitting}
+              autoComplete="email"
+              inputMode="email"
+              className="form-input"
+            />
+          </FormField>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {/* Date of birth */}

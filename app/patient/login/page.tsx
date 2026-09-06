@@ -9,11 +9,13 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { usePatientLogin } from "@/lib/hooks/auth/usePatientLogin";
 
 export default function PatientLoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [contact, setContact] = useState("");
 
@@ -279,6 +281,21 @@ export default function PatientLoginPage() {
               </div>
             </div>
 
+            {/* Staff portal link */}
+            <div className="mt-6 border-t border-white/[0.06] pt-5 text-center">
+              <p className="font-manrope text-[9px] text-[#8FA8A2]/50">
+                Are you a healthcare professional?
+              </p>
+
+              <button
+                type="button"
+                onClick={() => router.push("/")}
+                className="group mt-2 inline-flex items-center gap-1.5 font-manrope text-[10px] font-bold text-[#2DD4BF] transition-colors hover:text-[#5EEAD4] cursor-pointer"
+              >
+                Sign in to the Staff Portal
+                <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+              </button>
+            </div>
             <p className="mt-5 text-center font-manrope text-[8px] text-[#8FA8A2]/40">
               Remote Care · Secure Patient Portal
             </p>
