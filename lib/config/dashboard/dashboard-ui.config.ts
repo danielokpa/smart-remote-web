@@ -121,9 +121,9 @@ export const DASHBOARD_UI_CONFIG: Record<
         icon: Bell,
       },
       {
-        label: "Reports",
-        href: "/dashboard/reports",
-        description: "Healthcare reports",
+        label: "Readings",
+        href: "/dashboard/readings",
+        description: "Healthcare readings",
         icon: ClipboardList,
       },
       {
