@@ -31,7 +31,7 @@ export default function DashboardLayout({
   /* ---------------------------------------------------------------------- */
 
   const handleLogout = () => {
-    authStorage.clearSession();
+    authStorage.clearSession("STAFF");
 
     setSidebarOpen(false);
 
@@ -135,13 +135,22 @@ export default function DashboardLayout({
   /* ---------------------------------------------------------------------- */
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute
+    authScope="STAFF"
+    allowedUserTypes={[
+      "ADMIN",
+      "DOCTOR",
+      "NURSE",
+    ]}
+    loginPath="/"
+  >
       <div className="h-[100dvh] bg-[#071A17] text-white overflow-hidden">
         <div className="flex h-full">
 
           {/* Desktop sidebar */}
           <div className="hidden lg:block h-full">
             <DashboardSidebar
+            authScope="STAFF"
               onLogout={handleLogout}
             />
           </div>
@@ -150,6 +159,7 @@ export default function DashboardLayout({
           <div className="flex-1 min-w-0 flex flex-col h-full">
 
             <DashboardTopbar
+              authScope="STAFF"
               onOpenSidebar={() => setSidebarOpen(true)}
               menuButtonRef={openBtnRef}
               onLogout={handleLogout}
@@ -194,6 +204,7 @@ export default function DashboardLayout({
             ].join(" ")}
           >
             <DashboardSidebar
+              authScope="STAFF"
               onClose={() => setSidebarOpen(false)}
               onLogout={handleLogout}
             />

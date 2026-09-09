@@ -326,7 +326,7 @@ export default function DevicesPage() {
   /* Authentication / role                                                   */
   /* ------------------------------------------------------------------------ */
 
-  const user = authStorage.getUser();
+  const user = authStorage.getUser("STAFF");
 
   const canManageDevices =
     user?.userType === "ADMIN";
@@ -430,10 +430,12 @@ export default function DevicesPage() {
 
     refetch,
   } = useDevices({
-    search: search || undefined,
-    cursor: currentCursor,
-    limit: PAGE_SIZE,
-  });
+      search: search || undefined,
+      cursor: currentCursor,
+      limit: PAGE_SIZE,
+    },
+    "STAFF"
+  );
 
   /* ------------------------------------------------------------------------ */
   /* Derived stats                                                            */

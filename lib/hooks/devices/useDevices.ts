@@ -10,6 +10,10 @@ import {
 import { devicesApi } from "@/lib/api/devices/api";
 
 import type {
+  AuthScope,
+} from "@/lib/types/auth/types";
+
+import type {
   GetDevicesParams,
   RegisterDevicePayload,
   UpdateDevicePayload,
@@ -22,21 +26,35 @@ import type {
 export const deviceKeys = {
   all: ["devices"] as const,
 
-  lists: () =>
-    [...deviceKeys.all, "list"] as const,
-
-  list: (params: GetDevicesParams) =>
+  lists: (authScope: AuthScope) =>
     [
-      ...deviceKeys.lists(),
+      ...deviceKeys.all,
+      authScope,
+      "list",
+    ] as const,
+
+  list: (
+    authScope: AuthScope,
+    params: GetDevicesParams
+  ) =>
+    [
+      ...deviceKeys.lists(authScope),
       params,
     ] as const,
 
-  details: () =>
-    [...deviceKeys.all, "detail"] as const,
-
-  detail: (id: string) =>
+  details: (authScope: AuthScope) =>
     [
-      ...deviceKeys.details(),
+      ...deviceKeys.all,
+      authScope,
+      "detail",
+    ] as const,
+
+  detail: (
+    authScope: AuthScope,
+    id: string
+  ) =>
+    [
+      ...deviceKeys.details(authScope),
       id,
     ] as const,
 };
@@ -46,32 +64,36 @@ export const deviceKeys = {
 /* -------------------------------------------------------------------------- */
 
 export function useDevices(
-  params: GetDevicesParams = {}
+  params: GetDevicesParams = {},
+  authScope: AuthScope
 ) {
   const queryClient =
     useQueryClient();
 
   /* ------------------------------------------------------------------------ */
   /* Get devices                                                              */
-  /* GET /devices                                                             */
   /* ------------------------------------------------------------------------ */
 
   const devicesQuery = useQuery({
-    queryKey: deviceKeys.list(params),
+    queryKey:
+      deviceKeys.list(
+        authScope,
+        params
+      ),
 
     queryFn: () =>
-      devicesApi.getAll(params),
+      devicesApi.getAll(
+        params,
+        authScope
+      ),
 
-    /*
-     * Keeps the previous list visible while
-     * a different search/cursor is loading.
-     */
-    placeholderData: keepPreviousData,
+    placeholderData:
+      keepPreviousData,
   });
 
   /* ------------------------------------------------------------------------ */
   /* Register device                                                          */
-  /* POST /devices                                                            */
+  /* STAFF ONLY                                                               */
   /* ------------------------------------------------------------------------ */
 
   const registerMutation =
@@ -84,24 +106,18 @@ export function useDevices(
         ),
 
       onSuccess: () => {
-        /*
-         * Refresh every cached device list.
-         *
-         * This handles:
-         * - current search
-         * - previous searches
-         * - different cursors
-         * - different limits
-         */
         queryClient.invalidateQueries({
-          queryKey: deviceKeys.lists(),
+          queryKey:
+            deviceKeys.lists(
+              "STAFF"
+            ),
         });
       },
     });
 
   /* ------------------------------------------------------------------------ */
   /* Update device                                                            */
-  /* PATCH /devices/:id                                                       */
+  /* STAFF ONLY                                                               */
   /* ------------------------------------------------------------------------ */
 
   const updateMutation =
@@ -121,31 +137,39 @@ export function useDevices(
       onSuccess: (
         updatedDevice
       ) => {
-        /*
-         * If this device has ever been
-         * fetched individually, immediately
-         * update its cached detail.
-         */
         queryClient.setQueryData(
           deviceKeys.detail(
+            "STAFF",
             updatedDevice.id
           ),
           updatedDevice
         );
 
+        queryClient.invalidateQueries({
+          queryKey:
+            deviceKeys.lists(
+              "STAFF"
+            ),
+        });
+
         /*
-         * Refresh all list queries because
-         * the device name/status may have changed.
+         * Patient device lists may also
+         * contain this device.
+         *
+         * Invalidate them too.
          */
         queryClient.invalidateQueries({
-          queryKey: deviceKeys.lists(),
+          queryKey:
+            deviceKeys.lists(
+              "PATIENT"
+            ),
         });
       },
     });
 
   /* ------------------------------------------------------------------------ */
   /* Delete device                                                            */
-  /* DELETE /devices/:id                                                      */
+  /* STAFF ONLY                                                               */
   /* ------------------------------------------------------------------------ */
 
   const deleteMutation =
@@ -159,38 +183,39 @@ export function useDevices(
         _deleted,
         deletedDeviceId
       ) => {
-        /*
-         * Remove the individual device from
-         * the React Query cache if it exists.
-         */
         queryClient.removeQueries({
           queryKey:
             deviceKeys.detail(
+              "STAFF",
               deletedDeviceId
             ),
         });
 
-        /*
-         * Refresh the device list so the
-         * deleted device disappears and
-         * pagination remains consistent
-         * with the backend.
-         */
+        queryClient.removeQueries({
+          queryKey:
+            deviceKeys.detail(
+              "PATIENT",
+              deletedDeviceId
+            ),
+        });
+
         queryClient.invalidateQueries({
-          queryKey: deviceKeys.lists(),
+          queryKey:
+            deviceKeys.lists(
+              "STAFF"
+            ),
+        });
+
+        queryClient.invalidateQueries({
+          queryKey:
+            deviceKeys.lists(
+              "PATIENT"
+            ),
         });
       },
     });
 
-  /* ------------------------------------------------------------------------ */
-  /* Return API                                                               */
-  /* ------------------------------------------------------------------------ */
-
   return {
-    /* ---------------------------------------------------------------------- */
-    /* List data                                                               */
-    /* ---------------------------------------------------------------------- */
-
     devices:
       devicesQuery.data?.items ?? [],
 
@@ -201,10 +226,6 @@ export function useDevices(
         hasNextPage: false,
         nextCursor: null,
       },
-
-    /* ---------------------------------------------------------------------- */
-    /* List query state                                                        */
-    /* ---------------------------------------------------------------------- */
 
     isLoading:
       devicesQuery.isLoading,
@@ -220,10 +241,6 @@ export function useDevices(
 
     devicesQuery,
 
-    /* ---------------------------------------------------------------------- */
-    /* Register                                                               */
-    /* ---------------------------------------------------------------------- */
-
     registerDevice:
       registerMutation.mutateAsync,
 
@@ -234,10 +251,6 @@ export function useDevices(
       registerMutation.error,
 
     registerMutation,
-
-    /* ---------------------------------------------------------------------- */
-    /* Update                                                                 */
-    /* ---------------------------------------------------------------------- */
 
     updateDevice:
       updateMutation.mutateAsync,
@@ -250,10 +263,6 @@ export function useDevices(
 
     updateMutation,
 
-    /* ---------------------------------------------------------------------- */
-    /* Delete                                                                 */
-    /* ---------------------------------------------------------------------- */
-
     deleteDevice:
       deleteMutation.mutateAsync,
 
@@ -265,28 +274,40 @@ export function useDevices(
 
     deleteMutation,
 
-    /* ---------------------------------------------------------------------- */
-    /* Manual refresh                                                         */
-    /* ---------------------------------------------------------------------- */
-
     refetch:
       devicesQuery.refetch,
   };
 }
 
-export function useAvailableDevices() {
+/* -------------------------------------------------------------------------- */
+/* Available devices                                                          */
+/* -------------------------------------------------------------------------- */
+
+export function useAvailableDevices(
+  authScope: AuthScope
+) {
   const query = useQuery({
-    queryKey: ["devices", "available"],
+    queryKey: [
+      ...deviceKeys.all,
+      authScope,
+      "available",
+    ] as const,
 
-    queryFn: () => devicesApi.getAvailable(),
+    queryFn: () =>
+      devicesApi.getAvailable(
+        authScope
+      ),
 
-    staleTime: 60 * 1000,
+    staleTime:
+      60 * 1000,
 
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus:
+      true,
   });
 
   return {
-    devices: query.data?.items ?? [],
+    devices:
+      query.data?.items ?? [],
 
     pagination:
       query.data?.pagination ?? {
@@ -295,14 +316,19 @@ export function useAvailableDevices() {
         nextCursor: null,
       },
 
-    isLoading: query.isLoading,
+    isLoading:
+      query.isLoading,
 
-    isFetching: query.isFetching,
+    isFetching:
+      query.isFetching,
 
-    isError: query.isError,
+    isError:
+      query.isError,
 
-    error: query.error,
+    error:
+      query.error,
 
-    refetch: query.refetch,
+    refetch:
+      query.refetch,
   };
 }

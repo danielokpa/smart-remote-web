@@ -1,4 +1,4 @@
-import { apiRequest } from "@/lib/api/api-client";
+import { apiRequest, patientApiRequest } from "@/lib/api/api-client";
 
 import type {
   GetPatientsParams,
@@ -144,7 +144,7 @@ export const patientsApi = {
   },
 
   getMySummary: async (): Promise<PatientSummary> => {
-    const response = await apiRequest<PatientSummary>("/patients/summary", {
+    const response = await patientApiRequest<PatientSummary>("/patients/summary", {
       method: "GET",
     });
 

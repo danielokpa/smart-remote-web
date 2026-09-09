@@ -38,14 +38,17 @@ export function usePatientLogin() {
 
       const patient = response.data;
 
-      authStorage.setSession({
-        id: patient.id,
-        token: patient.token,
-        userType: "PATIENT",
-        userId: patient.id,
-        email: patient.patient!.email!,
-        patient: patient.patient,
-      });
+      authStorage.setSession(
+        "PATIENT",
+        {
+          id: patient.id,
+          token: patient.token,
+          userType: "PATIENT",
+          userId: patient.id,
+          email: patient.patient!.email!,
+          patient: patient.patient,
+        }
+      );
 
       router.replace("/patient/dashboard");
     },

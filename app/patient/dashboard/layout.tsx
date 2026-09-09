@@ -31,11 +31,11 @@ export default function DashboardLayout({
   /* ---------------------------------------------------------------------- */
 
   const handleLogout = () => {
-    authStorage.clearSession();
+    authStorage.clearSession("PATIENT");
 
     setSidebarOpen(false);
 
-    router.replace("/");
+    router.replace("/patient/login");
   };
 
   /* ---------------------------------------------------------------------- */
@@ -135,13 +135,20 @@ export default function DashboardLayout({
   /* ---------------------------------------------------------------------- */
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute
+      authScope="PATIENT"
+      allowedUserTypes={[
+        "PATIENT",
+      ]}
+      loginPath="/patient/login"
+    >
       <div className="h-[100dvh] bg-[#071A17] text-white overflow-hidden">
         <div className="flex h-full">
 
           {/* Desktop sidebar */}
           <div className="hidden lg:block h-full">
             <DashboardSidebar
+              authScope="PATIENT"
               onLogout={handleLogout}
             />
           </div>
@@ -150,6 +157,7 @@ export default function DashboardLayout({
           <div className="flex-1 min-w-0 flex flex-col h-full">
 
             <DashboardTopbar
+              authScope="PATIENT"
               onOpenSidebar={() => setSidebarOpen(true)}
               menuButtonRef={openBtnRef}
               onLogout={handleLogout}
@@ -194,6 +202,7 @@ export default function DashboardLayout({
             ].join(" ")}
           >
             <DashboardSidebar
+              authScope="PATIENT"
               onClose={() => setSidebarOpen(false)}
               onLogout={handleLogout}
             />

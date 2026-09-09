@@ -4,24 +4,101 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import { HeartPulse, LogOut, X } from "lucide-react";
+import type { AuthScope } from "@/lib/types/auth/types";
 
 import { useRemoteCareUI } from "@/lib/hooks/dashboard/useDashboardUi";
 
 interface DashboardSidebarProps {
+  authScope: AuthScope;
+
   onClose?: () => void;
   onLogout?: () => void;
 }
 
 export default function DashboardSidebar({
+  authScope,
   onClose,
   onLogout,
 }: DashboardSidebarProps) {
   const pathname = usePathname();
 
   const {
+    config,
+    isLoading,
+  } = useRemoteCareUI(authScope);
+
+  /*
+   * Do not render role-specific navigation
+   * until the STAFF session has been resolved.
+   */
+  if (isLoading) {
+    return (
+      <aside
+        className={clsx(
+          "w-[280px] shrink-0",
+          "h-dvh min-h-0",
+          "bg-[#071A17]",
+          "border-r border-white/10",
+          "flex flex-col",
+          "overflow-hidden"
+        )}
+      >
+        {/* Brand */}
+        <div className="border-b border-white/10 px-5 py-4.5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#2DD4BF]/20 bg-[#0E2723]">
+              <HeartPulse className="h-5 w-5 text-[#2DD4BF]" />
+            </div>
+
+            <div className="min-w-0">
+              <p className="truncate font-manrope font-bold leading-tight text-white">
+                Remote Care
+              </p>
+
+              <div className="mt-1 h-3 w-24 animate-pulse rounded bg-white/10" />
+            </div>
+          </div>
+        </div>
+
+        {/* Navigation skeleton */}
+        <nav className="flex-1 px-3 py-4">
+          <div className="px-3 pb-2">
+            <div className="h-3 w-20 animate-pulse rounded bg-white/10" />
+          </div>
+
+          <div className="space-y-2">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div
+                key={index}
+                className="flex items-center gap-3 rounded-2xl px-3 py-3"
+              >
+                <div className="h-10 w-10 shrink-0 animate-pulse rounded-xl bg-white/5" />
+
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 w-24 animate-pulse rounded bg-white/10" />
+                  <div className="h-2.5 w-32 animate-pulse rounded bg-white/5" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </nav>
+      </aside>
+    );
+  }
+
+  /*
+   * ProtectedRoute should normally prevent this state,
+   * but keep the guard here so we never call .map()
+   * on undefined.
+   */
+  if (!config) {
+    return null;
+  }
+
+  const {
     navItems,
     label,
-  } = useRemoteCareUI();
+  } = config;
 
   return (
     <aside

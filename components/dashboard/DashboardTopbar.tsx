@@ -9,31 +9,83 @@ import {
   UserCircle2,
 } from "lucide-react";
 
-import { authStorage } from "@/lib/store/auth";
+import type { AuthScope } from "@/lib/types/auth/types";
 import { useRemoteCareUI } from "@/lib/hooks/dashboard/useDashboardUi";
 
 interface DashboardTopbarProps {
+  authScope: AuthScope;
   onOpenSidebar?: () => void;
   menuButtonRef?: React.RefObject<HTMLButtonElement | null>;
   onLogout?: () => void;
 }
 
 export default function DashboardTopbar({
+  authScope,
   onOpenSidebar,
   menuButtonRef,
   onLogout,
 }: DashboardTopbarProps) {
   const pathname = usePathname();
 
-  const { header } = useRemoteCareUI();
+  const {
+    config,
+    user,
+    isLoading,
+  } = useRemoteCareUI(authScope);
 
-  const user = authStorage.getUser();
+  const header = config?.header;
 
+  /*
+   * The staff user is already returned by useRemoteCareUI(),
+   * so there is no need to call authStorage.getUser() again.
+   */
   const userType = user?.userType ?? "";
 
-  const roleLabel =
-    userType.charAt(0) +
-    userType.slice(1).toLowerCase();
+  const roleLabel = userType
+    ? userType.charAt(0) +
+      userType.slice(1).toLowerCase()
+    : "";
+
+  /*
+   * Prevent rendering role-specific header information
+   * before the STAFF session has been resolved.
+   */
+  if (isLoading || !header) {
+    return (
+      <header className="sticky top-0 z-50 h-19 border-b border-white/10 bg-[#071A17]/95 backdrop-blur-md">
+        <div className="px-4 py-3.5 md:px-6">
+          <div className="flex items-center justify-between gap-4">
+            {/* Left */}
+            <div className="flex min-w-0 items-center gap-3">
+              <button
+                ref={menuButtonRef}
+                type="button"
+                onClick={onOpenSidebar}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 transition hover:bg-white/5 lg:hidden"
+                aria-label="Open sidebar"
+              >
+                <Menu className="h-5 w-5 text-white" />
+              </button>
+
+              <div className="flex items-center gap-3">
+                <div className="h-4 w-4 animate-pulse rounded-full bg-white/10" />
+
+                <div className="space-y-2">
+                  <div className="h-4 w-32 animate-pulse rounded bg-white/10" />
+                  <div className="h-3 w-44 animate-pulse rounded bg-white/5" />
+                </div>
+              </div>
+            </div>
+
+            {/* Right */}
+            <div className="flex items-center gap-2">
+              <div className="h-10 w-10 animate-pulse rounded-full bg-white/5" />
+            </div>
+          </div>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header className="sticky top-0 z-50 h-19 border-b border-white/10 bg-[#071A17]/95 backdrop-blur-md">

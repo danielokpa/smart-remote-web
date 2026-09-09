@@ -1,4 +1,9 @@
-import { apiRequest } from "@/lib/api/api-client";
+import {
+  scopedApiRequest,
+  staffApiRequest,
+} from "@/lib/api/api-client";
+
+import type { AuthScope } from "@/lib/types/auth/types";
 
 import type {
   DeleteDeviceResponse,
@@ -13,18 +18,20 @@ export const devicesApi = {
   /* ------------------------------------------------------------------------ */
   /* Register device                                                          */
   /* POST /devices                                                            */
+  /* STAFF ONLY                                                               */
   /* ------------------------------------------------------------------------ */
 
   register: async (
     payload: RegisterDevicePayload
   ): Promise<Device> => {
-    const response = await apiRequest<Device>(
-      "/devices",
-      {
-        method: "POST",
-        body: JSON.stringify(payload),
-      }
-    );
+    const response =
+      await staffApiRequest<Device>(
+        "/devices",
+        {
+          method: "POST",
+          body: JSON.stringify(payload),
+        }
+      );
 
     if (!response.data) {
       throw new Error(
@@ -38,19 +45,16 @@ export const devicesApi = {
   /* ------------------------------------------------------------------------ */
   /* Get all devices                                                          */
   /* GET /devices                                                             */
+  /* STAFF + PATIENT                                                          */
   /* ------------------------------------------------------------------------ */
 
   getAll: async (
-    params: GetDevicesParams = {}
+    params: GetDevicesParams = {},
+    authScope: AuthScope
   ): Promise<DevicesListResponse> => {
-    const searchParams = new URLSearchParams();
+    const searchParams =
+      new URLSearchParams();
 
-    /*
-     * Search
-     *
-     * Only send search when it contains an actual
-     * non-whitespace value.
-     */
     if (
       typeof params.search === "string" &&
       params.search.trim()
@@ -61,9 +65,6 @@ export const devicesApi = {
       );
     }
 
-    /*
-     * Cursor
-     */
     if (
       typeof params.cursor === "string" &&
       params.cursor
@@ -74,9 +75,6 @@ export const devicesApi = {
       );
     }
 
-    /*
-     * Limit
-     */
     if (
       typeof params.limit === "number"
     ) {
@@ -94,8 +92,12 @@ export const devicesApi = {
       : "/devices";
 
     const response =
-      await apiRequest<DevicesListResponse>(
-        endpoint
+      await scopedApiRequest<DevicesListResponse>(
+        authScope,
+        endpoint,
+        {
+          method: "GET",
+        }
       );
 
     if (!response.data) {
@@ -110,14 +112,20 @@ export const devicesApi = {
   /* ------------------------------------------------------------------------ */
   /* Get device by ID                                                         */
   /* GET /devices/:id                                                         */
+  /* STAFF + PATIENT                                                          */
   /* ------------------------------------------------------------------------ */
 
   getById: async (
-    id: string
+    id: string,
+    authScope: AuthScope
   ): Promise<Device> => {
     const response =
-      await apiRequest<Device>(
-        `/devices/${id}`
+      await scopedApiRequest<Device>(
+        authScope,
+        `/devices/${id}`,
+        {
+          method: "GET",
+        }
       );
 
     if (!response.data) {
@@ -132,6 +140,7 @@ export const devicesApi = {
   /* ------------------------------------------------------------------------ */
   /* Update device                                                            */
   /* PATCH /devices/:id                                                       */
+  /* STAFF ONLY                                                               */
   /* ------------------------------------------------------------------------ */
 
   update: async (
@@ -139,7 +148,7 @@ export const devicesApi = {
     payload: UpdateDevicePayload
   ): Promise<Device> => {
     const response =
-      await apiRequest<Device>(
+      await staffApiRequest<Device>(
         `/devices/${id}`,
         {
           method: "PATCH",
@@ -159,34 +168,23 @@ export const devicesApi = {
   /* ------------------------------------------------------------------------ */
   /* Delete device                                                            */
   /* DELETE /devices/:id                                                      */
-  /*                                                                          */
-  /* Backend returns:                                                         */
-  /*                                                                          */
-  /* data: true                                                               */
+  /* STAFF ONLY                                                               */
   /* ------------------------------------------------------------------------ */
 
   delete: async (
     id: string
   ): Promise<DeleteDeviceResponse> => {
     const response =
-      await apiRequest<DeleteDeviceResponse>(
+      await staffApiRequest<DeleteDeviceResponse>(
         `/devices/${id}`,
         {
           method: "DELETE",
         }
       );
 
-    /*
-     * Boolean false is a valid response.
-     *
-     * Therefore we MUST NOT use:
-     *
-     * if (!response.data)
-     *
-     * because false would incorrectly be treated
-     * as a missing response.
-     */
-    if (typeof response.data !== "boolean") {
+    if (
+      typeof response.data !== "boolean"
+    ) {
       throw new Error(
         "Device deletion response was invalid."
       );
@@ -195,9 +193,18 @@ export const devicesApi = {
     return response.data;
   },
 
-  getAvailable: async (): Promise<DevicesListResponse> => {
+  /* ------------------------------------------------------------------------ */
+  /* Get available devices                                                    */
+  /* GET /devices                                                             */
+  /* STAFF + PATIENT                                                          */
+  /* ------------------------------------------------------------------------ */
+
+  getAvailable: async (
+    authScope: AuthScope
+  ): Promise<DevicesListResponse> => {
     const response =
-      await apiRequest<DevicesListResponse>(
+      await scopedApiRequest<DevicesListResponse>(
+        authScope,
         "/devices",
         {
           method: "GET",

@@ -7,20 +7,22 @@
  * - Request execution
  * - Response parsing
  * - API error normalization
- * - Session cleanup on unauthorized responses
+ * - Scoped session cleanup on unauthorized responses
  */
 
 import { authStorage } from "@/lib/store/auth";
 
+import type { AuthScope } from "@/lib/types/auth/types";
+
 /* -------------------------------------------------------------------------- */
-/*                               CONFIGURATION                                */
+/* CONFIGURATION                                                              */
 /* -------------------------------------------------------------------------- */
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") ?? "";
 
 /* -------------------------------------------------------------------------- */
-/*                                   TYPES                                    */
+/* TYPES                                                                      */
 /* -------------------------------------------------------------------------- */
 
 export interface ApiResponse<T = unknown> {
@@ -30,8 +32,16 @@ export interface ApiResponse<T = unknown> {
   data: T | null;
 }
 
+export interface ApiRequestOptions extends RequestInit {
+  /**
+   * Determines which authentication session/token
+   * should be used for this request.
+   */
+  authScope?: AuthScope;
+}
+
 /* -------------------------------------------------------------------------- */
-/*                                 API ERROR                                  */
+/* API ERROR                                                                  */
 /* -------------------------------------------------------------------------- */
 
 export class ApiError extends Error {
@@ -52,7 +62,7 @@ export class ApiError extends Error {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                              RESPONSE PARSER                               */
+/* RESPONSE PARSER                                                            */
 /* -------------------------------------------------------------------------- */
 
 async function parseResponse<T>(
@@ -60,7 +70,7 @@ async function parseResponse<T>(
 ): Promise<ApiResponse<T>> {
   const statusCode = response.status;
 
-  let json: any = null;
+  let json: unknown = null;
 
   try {
     json = await response.json();
@@ -75,30 +85,82 @@ async function parseResponse<T>(
     console.log("API Response:", json);
   }
 
+  /* ------------------------------------------------------------------------ */
+  /* Safely extract response fields                                           */
+  /* ------------------------------------------------------------------------ */
+
+  const responseObject =
+    typeof json === "object" &&
+    json !== null
+      ? (json as Record<string, unknown>)
+      : {};
+
+  /* ------------------------------------------------------------------------ */
+  /* Message                                                                  */
+  /* ------------------------------------------------------------------------ */
+
+  const rawMessage = responseObject.message;
+
   const message =
-    typeof json?.message === "string"
-      ? json.message
-      : Array.isArray(json?.message)
-        ? json.message.join(", ")
+    typeof rawMessage === "string"
+      ? rawMessage
+      : Array.isArray(rawMessage)
+        ? rawMessage.join(", ")
         : "Something went wrong.";
+
+  /* ------------------------------------------------------------------------ */
+  /* Status                                                                   */
+  /* ------------------------------------------------------------------------ */
+
+  const responseStatus =
+    responseObject.status;
+
+  /* ------------------------------------------------------------------------ */
+  /* Status code                                                              */
+  /* ------------------------------------------------------------------------ */
+
+  const responseStatusCode =
+    responseObject.statusCode;
+
+  /* ------------------------------------------------------------------------ */
+  /* Data                                                                     */
+  /* ------------------------------------------------------------------------ */
+
+  /**
+   * The generic T represents the shape the caller expects.
+   *
+   * TypeScript cannot determine the runtime shape of JSON data,
+   * so we narrow it to T here.
+   */
+  const responseData =
+    responseObject.data as T | null | undefined;
+
+  /* ------------------------------------------------------------------------ */
+  /* Normalized response                                                      */
+  /* ------------------------------------------------------------------------ */
 
   const result: ApiResponse<T> = {
     status:
-      typeof json?.status === "string"
-        ? json.status
+      typeof responseStatus === "string"
+        ? responseStatus
         : response.ok
           ? "success"
           : "error",
 
     statusCode:
-      typeof json?.statusCode === "number"
-        ? json.statusCode
+      typeof responseStatusCode === "number"
+        ? responseStatusCode
         : statusCode,
 
     message,
 
-    data: json?.data ?? null,
+    data:
+      responseData ?? null,
   };
+
+  /* ------------------------------------------------------------------------ */
+  /* Normalize API errors                                                     */
+  /* ------------------------------------------------------------------------ */
 
   if (!response.ok) {
     throw new ApiError(
@@ -112,47 +174,100 @@ async function parseResponse<T>(
 }
 
 /* -------------------------------------------------------------------------- */
-/*                              MAIN API REQUEST                              */
+/* MAIN API REQUEST                                                           */
 /* -------------------------------------------------------------------------- */
 
 export async function apiRequest<T = unknown>(
   endpoint: string,
-  options: RequestInit = {}
+  options: ApiRequestOptions = {}
 ): Promise<ApiResponse<T>> {
-  const token = authStorage.getToken();
+  /**
+   * Extract authScope so it is NOT passed to fetch().
+   *
+   * Everything else belongs to RequestInit.
+   */
+  const {
+    authScope = "STAFF",
+    headers: providedHeaders,
+    ...requestOptions
+  } = options;
 
-  const headers = new Headers(options.headers);
+  /* ------------------------------------------------------------------------ */
+  /* Authentication                                                           */
+  /* ------------------------------------------------------------------------ */
 
-  headers.set("Content-Type", "application/json");
+  const token =
+    authStorage.getToken(authScope);
 
-  if (token) {
-    headers.set("Authorization", `Bearer ${token}`);
+  /* ------------------------------------------------------------------------ */
+  /* Headers                                                                  */
+  /* ------------------------------------------------------------------------ */
+
+  const headers = new Headers(
+    providedHeaders
+  );
+
+  /**
+   * Only set JSON content type when a body exists.
+   */
+  if (requestOptions.body) {
+    headers.set(
+      "Content-Type",
+      "application/json"
+    );
   }
 
-  const url = `${API_BASE_URL}${endpoint}`;
+  if (token) {
+    headers.set(
+      "Authorization",
+      `Bearer ${token}`
+    );
+  }
+
+  /* ------------------------------------------------------------------------ */
+  /* URL                                                                      */
+  /* ------------------------------------------------------------------------ */
+
+  const url =
+    `${API_BASE_URL}${endpoint}`;
 
   if (process.env.NODE_ENV === "development") {
     console.log("API Request:", {
       url,
-      method: options.method ?? "GET",
-      body: options.body,
+      method:
+        requestOptions.method ?? "GET",
+      authScope,
+      hasToken: Boolean(token),
     });
   }
 
+  /* ------------------------------------------------------------------------ */
+  /* Request                                                                  */
+  /* ------------------------------------------------------------------------ */
+
   try {
     const response = await fetch(url, {
-      ...options,
+      ...requestOptions,
       headers,
     });
 
+    /* ---------------------------------------------------------------------- */
+    /* Scoped unauthorized handling                                           */
+    /* ---------------------------------------------------------------------- */
+
     /**
-     * The token is no longer valid.
+     * IMPORTANT:
      *
-     * Clear the local session here, but don't perform
-     * navigation from the API layer.
+     * Only clear the session whose token was actually
+     * used for this request.
+     *
+     * Example:
+     *
+     * STAFF request -> STAFF session gets cleared
+     * PATIENT request -> PATIENT session gets cleared
      */
     if (response.status === 401) {
-      authStorage.clearSession();
+      authStorage.clearSession(authScope);
     }
 
     return await parseResponse<T>(response);
@@ -168,4 +283,62 @@ export async function apiRequest<T = unknown>(
       0
     );
   }
+}
+
+/* -------------------------------------------------------------------------- */
+/* STAFF API                                                                  */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Use this for APIs that require a staff token:
+ *
+ * ADMIN
+ * DOCTOR
+ * NURSE
+ */
+export function staffApiRequest<T = unknown>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<ApiResponse<T>> {
+  return apiRequest<T>(
+    endpoint,
+    {
+      ...options,
+      authScope: "STAFF",
+    }
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* PATIENT API                                                                */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Use this for APIs that require a patient token.
+ */
+export function patientApiRequest<T = unknown>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<ApiResponse<T>> {
+  return apiRequest<T>(
+    endpoint,
+    {
+      ...options,
+      authScope: "PATIENT",
+    }
+  );
+}
+
+export function scopedApiRequest<T = unknown>(
+  authScope: AuthScope,
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<ApiResponse<T>> {
+  return apiRequest<T>(
+    endpoint,
+    {
+      ...options,
+      authScope,
+    }
+  );
 }

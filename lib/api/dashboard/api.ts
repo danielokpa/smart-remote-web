@@ -1,4 +1,4 @@
-import { apiRequest } from "@/lib/api/api-client";
+import { apiRequest, staffApiRequest } from "@/lib/api/api-client";
 import type { AlertStatus } from "@/lib/types/alerts/types";
 
 export interface DashboardMetrics {
@@ -47,7 +47,7 @@ export interface DashboardSummary {
 export const dashboardApi = {
   getSummary: async (): Promise<DashboardSummary> => {
     const response =
-      await apiRequest<DashboardSummary>("/dashboard/summary");
+      await staffApiRequest<DashboardSummary>("/dashboard/summary");
 
     if (!response.data) {
       throw new Error(

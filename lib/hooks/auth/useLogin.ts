@@ -24,7 +24,10 @@ export function useLogin() {
 
     onSuccess: (response) => {
       if (response.data) {
-        authStorage.setSession(response.data);
+        authStorage.setSession(
+          "STAFF",
+          response.data
+        );
       }
     },
   });

@@ -1,30 +1,48 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import { authStorage } from "@/lib/store/auth";
-import type { UserType } from "@/lib/types/auth/types";
+
+import type {
+  AuthScope,
+  AuthUser,
+  UserType,
+} from "@/lib/types/auth/types";
 
 import {
   DASHBOARD_UI_CONFIG,
 } from "@/lib/config/dashboard/dashboard-ui.config";
 
-export function useRemoteCareUI() {
-  const user = authStorage.getUser();
+export function useRemoteCareUI(
+  authScope: AuthScope
+) {
+  const [user, setUser] =
+    useState<AuthUser | null>(null);
 
-  const userRole = user?.userType as UserType | undefined;
+  const [isLoading, setIsLoading] =
+    useState(true);
 
-  /**
-   * During the initial client render there may not
-   * be a stored user yet. ADMIN is only a safe fallback
-   * for rendering the configuration; authorization must
-   * still be enforced by the backend.
-   */
-  const role: UserType = userRole ?? "ADMIN";
+  useEffect(() => {
+    const storedUser =
+      authStorage.getUser(authScope);
 
-  const config = DASHBOARD_UI_CONFIG[role];
+    setUser(storedUser);
+    setIsLoading(false);
+  }, [authScope]);
+
+  const role = user?.userType as
+    | UserType
+    | undefined;
+
+  const config = role
+    ? DASHBOARD_UI_CONFIG[role]
+    : null;
 
   return {
-    ...config,
-    role,
     user,
+    role,
+    config,
+    isLoading,
   };
 }

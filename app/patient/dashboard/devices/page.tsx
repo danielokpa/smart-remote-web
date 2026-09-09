@@ -169,8 +169,10 @@ export default function PatientDevicesPage() {
     error: devicesError,
     refetch: refetchDevices,
   } = useDevices({
-    limit: 100,
-  });
+      limit: 100,
+    },
+    "PATIENT"
+  );
 
   const {
     createReading,

@@ -1,26 +1,34 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { authStorage } from "@/lib/store/auth";
 
 export function useAuth() {
-  const [user, setUser] =
-    useState(() => authStorage.getUser());
+  const router = useRouter();
+  const [user, setUser] = useState(() =>
+    authStorage.getUser("STAFF")
+  );
 
   useEffect(() => {
-    setUser(authStorage.getUser());
+    setUser(
+      authStorage.getUser("STAFF")
+    );
   }, []);
 
   const logout = () => {
-    authStorage.clearSession();
+    authStorage.clearSession("STAFF");
 
-    window.location.href = "/login";
+    router.replace("/");
   };
 
   return {
     user,
-    isAuthenticated: Boolean(user?.token),
+
+    isAuthenticated:
+      Boolean(user?.token),
+
     logout,
   };
 }

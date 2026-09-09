@@ -1,4 +1,5 @@
 export type UserType = "ADMIN" | "DOCTOR" | "NURSE" | "PATIENT";
+export type AuthScope = "STAFF" | "PATIENT";
 
 export interface LoginRequest {
   email: string;
@@ -9,6 +10,7 @@ export interface AuthUser {
   id: string;
   token: string;
   userType: UserType;
+  // authScope: AuthScope;
   userId: string;
   email: string;
 

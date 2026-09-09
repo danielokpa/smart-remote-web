@@ -7,7 +7,7 @@ import { dashboardApi } from "@/lib/api/dashboard/api";
 export const dashboardKeys = {
   all: ["dashboard"] as const,
   summary: () =>
-    [...dashboardKeys.all, "summary"] as const,
+    [...dashboardKeys.all, "staff", "summary"] as const,
 };
 
 export function useDashboard() {
