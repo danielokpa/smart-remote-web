@@ -134,7 +134,7 @@ export default function DashboardTopbar({
             )}
 
             {/* Profile */}
-            <Link
+            {/* <Link
               href="/dashboard/profile"
               className={[
                 "flex h-10 w-10 items-center justify-center rounded-full",
@@ -148,7 +148,7 @@ export default function DashboardTopbar({
               title="Profile"
             >
               <UserCircle2 className="h-5 w-5 text-white" />
-            </Link>
+            </Link> */}
 
             {/* Desktop logout */}
             <button

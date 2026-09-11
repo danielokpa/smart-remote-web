@@ -132,12 +132,12 @@ export const DASHBOARD_UI_CONFIG: Record<
         description: "Monitoring devices",
         icon: Cpu,
       },
-      {
-        label: "Settings",
-        href: "/dashboard/settings",
-        description: "System settings",
-        icon: Settings,
-      },
+      // {
+      //   label: "Settings",
+      //   href: "/dashboard/settings",
+      //   description: "System settings",
+      //   icon: Settings,
+      // },
     ],
   },
 
@@ -364,30 +364,30 @@ export const DASHBOARD_UI_CONFIG: Record<
         description: "Take and submit a health reading",
         icon: HeartPulse,
       },
-      {
-        label: "My Health",
-        href: "/patient/dashboard/monitoring",
-        description: "Your health readings",
-        icon: Activity,
-      },
-      {
-        label: "Appointments",
-        href: "/patient/dashboard/appointments",
-        description: "Your appointments",
-        icon: CalendarDays,
-      },
+      // {
+      //   label: "My Health",
+      //   href: "/patient/dashboard/monitoring",
+      //   description: "Your health readings",
+      //   icon: Activity,
+      // },
+      // {
+      //   label: "Appointments",
+      //   href: "/patient/dashboard/appointments",
+      //   description: "Your appointments",
+      //   icon: CalendarDays,
+      // },
       {
         label: "Alerts",
         href: "/patient/dashboard/alerts",
         description: "Your health alerts",
         icon: Bell,
       },
-      {
-        label: "Profile",
-        href: "/patient/dashboard/profile",
-        description: "Your patient profile",
-        icon: UserCircle2,
-      },
+      // {
+      //   label: "Profile",
+      //   href: "/patient/dashboard/profile",
+      //   description: "Your patient profile",
+      //   icon: UserCircle2,
+      // },
     ],
   },
 };
