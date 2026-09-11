@@ -340,14 +340,14 @@ export const DASHBOARD_UI_CONFIG: Record<
         title: "Health Monitoring",
         description:
           "View your latest health readings and monitoring data.",
-        href: "/dashboard/monitoring",
+        href: "/patient/dashboard/monitoring",
       },
       {
         key: "alerts",
         title: "Health Alerts",
         description:
           "Review important alerts related to your health.",
-        href: "/dashboard/alerts",
+        href: "/patient/dashboard/alerts",
       },
     ],
 
@@ -366,25 +366,25 @@ export const DASHBOARD_UI_CONFIG: Record<
       },
       {
         label: "My Health",
-        href: "/dashboard/monitoring",
+        href: "/patient/dashboard/monitoring",
         description: "Your health readings",
         icon: Activity,
       },
       {
         label: "Appointments",
-        href: "/dashboard/appointments",
+        href: "/patient/dashboard/appointments",
         description: "Your appointments",
         icon: CalendarDays,
       },
       {
         label: "Alerts",
-        href: "/dashboard/alerts",
+        href: "/patient/dashboard/alerts",
         description: "Your health alerts",
         icon: Bell,
       },
       {
         label: "Profile",
-        href: "/dashboard/profile",
+        href: "/patient/dashboard/profile",
         description: "Your patient profile",
         icon: UserCircle2,
       },

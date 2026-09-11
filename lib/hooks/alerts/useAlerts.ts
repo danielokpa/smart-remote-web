@@ -9,36 +9,72 @@ import { alertsApi } from "@/lib/api/alerts/alerts";
 
 import type {
   Alert,
-  AlertStatus,
   GetAlertsParams,
 } from "@/lib/types/alerts/alerts";
+
+import type {
+  AuthScope,
+} from "@/lib/types/auth/types";
 
 /* -------------------------------------------------------------------------- */
 /* Query keys                                                                 */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Alert query keys are scoped by authentication scope.
+ *
+ * This is important because STAFF and PATIENT can both
+ * request /alerts, but they must never share the same
+ * React Query cache.
+ *
+ * Example:
+ *
+ * ["alerts", "STAFF", "list", {...}]
+ * ["alerts", "PATIENT", "list", {...}]
+ *
+ * and:
+ *
+ * ["alerts", "STAFF", "detail", alertId]
+ * ["alerts", "PATIENT", "detail", alertId]
+ */
 export const alertKeys = {
   all: ["alerts"] as const,
 
-  lists: () => [
-    ...alertKeys.all,
-    "list",
-  ] as const,
+  lists: (
+    authScope: AuthScope
+  ) =>
+    [
+      ...alertKeys.all,
+      authScope,
+      "list",
+    ] as const,
 
-  list: (params?: GetAlertsParams) => [
-    ...alertKeys.lists(),
-    params ?? {},
-  ] as const,
+  list: (
+    authScope: AuthScope,
+    params?: GetAlertsParams
+  ) =>
+    [
+      ...alertKeys.lists(authScope),
+      params ?? {},
+    ] as const,
 
-  details: () => [
-    ...alertKeys.all,
-    "detail",
-  ] as const,
+  details: (
+    authScope: AuthScope
+  ) =>
+    [
+      ...alertKeys.all,
+      authScope,
+      "detail",
+    ] as const,
 
-  detail: (id: string) => [
-    ...alertKeys.details(),
-    id,
-  ] as const,
+  detail: (
+    authScope: AuthScope,
+    id: string
+  ) =>
+    [
+      ...alertKeys.details(authScope),
+      id,
+    ] as const,
 };
 
 /* -------------------------------------------------------------------------- */
@@ -60,7 +96,18 @@ export interface UseAlertsOptions
 /* Get all alerts                                                             */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Fetch paginated alerts using the authentication
+ * token belonging to the supplied auth scope.
+ *
+ * STAFF:
+ *   Uses remote_care_staff_auth_token
+ *
+ * PATIENT:
+ *   Uses remote_care_patient_auth_token
+ */
 export function useAlerts(
+  authScope: AuthScope,
   options: UseAlertsOptions = {}
 ) {
   const {
@@ -71,24 +118,48 @@ export function useAlerts(
   } = options;
 
   const query = useInfiniteQuery({
-    queryKey: alertKeys.list({
-      patientId,
-      status,
-      limit,
-    }),
+    /* ---------------------------------------------------------------------- */
+    /* Scoped query key                                                       */
+    /* ---------------------------------------------------------------------- */
+
+    queryKey: alertKeys.list(
+      authScope,
+      {
+        patientId,
+        status,
+        limit,
+      }
+    ),
+
+    /* ---------------------------------------------------------------------- */
+    /* Cursor                                                                 */
+    /* ---------------------------------------------------------------------- */
 
     initialPageParam:
       undefined as string | undefined,
 
-    queryFn: ({ pageParam }) =>
-      alertsApi.list({
-        patientId,
-        status,
-        limit,
-        cursor: pageParam,
-      }),
+    /* ---------------------------------------------------------------------- */
+    /* Request                                                                */
+    /* ---------------------------------------------------------------------- */
 
-    getNextPageParam: (lastPage) => {
+    queryFn: ({ pageParam }) =>
+      alertsApi.list(
+        {
+          patientId,
+          status,
+          limit,
+          cursor: pageParam,
+        },
+        authScope
+      ),
+
+    /* ---------------------------------------------------------------------- */
+    /* Cursor pagination                                                      */
+    /* ---------------------------------------------------------------------- */
+
+    getNextPageParam: (
+      lastPage
+    ) => {
       if (
         !lastPage.pagination.hasNextPage
       ) {
@@ -109,7 +180,7 @@ export function useAlerts(
   });
 
   /* ------------------------------------------------------------------------ */
-  /* Flatten all loaded pages                                                */
+  /* Flatten loaded pages                                                    */
   /* ------------------------------------------------------------------------ */
 
   const alerts: Alert[] =
@@ -118,7 +189,7 @@ export function useAlerts(
     ) ?? [];
 
   /* ------------------------------------------------------------------------ */
-  /* Latest pagination information                                           */
+  /* Latest pagination                                                        */
   /* ------------------------------------------------------------------------ */
 
   const latestPage =
@@ -126,29 +197,42 @@ export function useAlerts(
       query.data.pages.length - 1
     ];
 
+  /* ------------------------------------------------------------------------ */
+  /* Return                                                                   */
+  /* ------------------------------------------------------------------------ */
+
   return {
     alerts,
 
-    pages: query.data?.pages ?? [],
+    pages:
+      query.data?.pages ?? [],
 
-    isLoading: query.isLoading,
+    isLoading:
+      query.isLoading,
 
-    isFetching: query.isFetching,
+    isFetching:
+      query.isFetching,
 
     isFetchingNextPage:
       query.isFetchingNextPage,
 
-    hasNextPage: query.hasNextPage,
+    hasNextPage:
+      query.hasNextPage,
 
-    fetchNextPage: query.fetchNextPage,
+    fetchNextPage:
+      query.fetchNextPage,
 
-    refetch: query.refetch,
+    refetch:
+      query.refetch,
 
-    isError: query.isError,
+    isError:
+      query.isError,
 
-    error: query.error,
+    error:
+      query.error,
 
-    isSuccess: query.isSuccess,
+    isSuccess:
+      query.isSuccess,
 
     pagination:
       latestPage?.pagination ?? null,
@@ -156,20 +240,40 @@ export function useAlerts(
 }
 
 /* -------------------------------------------------------------------------- */
-/* Optional: Get one alert                                                   */
+/* Get one alert                                                              */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Keep this hook only if/when GET /alerts/:id
- * is officially available on the backend.
+ * Fetch one alert using the authentication
+ * token belonging to the supplied auth scope.
+ *
+ * STAFF:
+ *   alertsApi.getById(id, "STAFF")
+ *
+ * PATIENT:
+ *   alertsApi.getById(id, "PATIENT")
  */
 export function useAlert(
+  authScope: AuthScope,
   id: string | undefined
 ) {
   const query = useQuery<Alert, Error>({
+    /* ---------------------------------------------------------------------- */
+    /* Scoped detail query key                                                */
+    /* ---------------------------------------------------------------------- */
+
     queryKey: id
-      ? alertKeys.detail(id)
-      : alertKeys.details(),
+      ? alertKeys.detail(
+          authScope,
+          id
+        )
+      : alertKeys.details(
+          authScope
+        ),
+
+    /* ---------------------------------------------------------------------- */
+    /* Request                                                                */
+    /* ---------------------------------------------------------------------- */
 
     queryFn: async () => {
       if (!id) {
@@ -178,7 +282,10 @@ export function useAlert(
         );
       }
 
-      return alertsApi.getById(id);
+      return alertsApi.getById(
+        id,
+        authScope
+      );
     },
 
     enabled: Boolean(id),
@@ -188,19 +295,30 @@ export function useAlert(
     refetchOnWindowFocus: true,
   });
 
+  /* ------------------------------------------------------------------------ */
+  /* Return                                                                   */
+  /* ------------------------------------------------------------------------ */
+
   return {
-    alert: query.data ?? null,
+    alert:
+      query.data ?? null,
 
-    isLoading: query.isLoading,
+    isLoading:
+      query.isLoading,
 
-    isFetching: query.isFetching,
+    isFetching:
+      query.isFetching,
 
-    isError: query.isError,
+    isError:
+      query.isError,
 
-    error: query.error,
+    error:
+      query.error,
 
-    isSuccess: query.isSuccess,
+    isSuccess:
+      query.isSuccess,
 
-    refetch: query.refetch,
+    refetch:
+      query.refetch,
   };
 }

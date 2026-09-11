@@ -1,8 +1,13 @@
-import { apiRequest } from "@/lib/api/api-client";
+import {
+  scopedApiRequest,
+} from "@/lib/api/api-client";
+
+import type {
+  AuthScope,
+} from "@/lib/types/auth/types";
 
 import type {
   Alert,
-  AlertStatus,
   AlertsListResponse,
   GetAlertsParams,
 } from "@/lib/types/alerts/alerts";
@@ -28,11 +33,17 @@ function buildAlertsQuery(
   }
 
   if (params.status) {
-    searchParams.set("status", params.status);
+    searchParams.set(
+      "status",
+      params.status
+    );
   }
 
   if (params.cursor) {
-    searchParams.set("cursor", params.cursor);
+    searchParams.set(
+      "cursor",
+      params.cursor
+    );
   }
 
   if (params.limit !== undefined) {
@@ -51,9 +62,13 @@ function buildAlertsQuery(
 /* Validation                                                                 */
 /* -------------------------------------------------------------------------- */
 
-function validateAlertId(id: string): void {
+function validateAlertId(
+  id: string
+): void {
   if (!id || !id.trim()) {
-    throw new Error("An alert ID is required.");
+    throw new Error(
+      "An alert ID is required."
+    );
   }
 }
 
@@ -63,21 +78,24 @@ function validateAlertId(id: string): void {
 
 export const alertsApi = {
   /**
-   * Get all alerts.
+   * Get alerts for the authenticated scope.
    *
-   * Supports:
-   * - patient filtering
-   * - status filtering
-   * - cursor pagination
-   * - configurable page size
+   * STAFF:
+   *   Uses the staff token.
+   *
+   * PATIENT:
+   *   Uses the patient token.
    */
   list: async (
-    params?: GetAlertsParams
+    params: GetAlertsParams | undefined,
+    authScope: AuthScope
   ): Promise<AlertsListResponse> => {
-    const query = buildAlertsQuery(params);
+    const query =
+      buildAlertsQuery(params);
 
     const response =
-      await apiRequest<AlertsListResponse>(
+      await scopedApiRequest<AlertsListResponse>(
+        authScope,
         `/alerts${query}`,
         {
           method: "GET",
@@ -94,22 +112,23 @@ export const alertsApi = {
   },
 
   /**
-   * Get a single alert.
-   *
-   * This is intentionally included here only if/when
-   * GET /alerts/:id is exposed by the backend.
-   *
-   * Do not use this method until that endpoint exists.
+   * Get one alert using the token belonging
+   * to the supplied authentication scope.
    */
-  getById: async (id: string): Promise<Alert> => {
+  getById: async (
+    id: string,
+    authScope: AuthScope
+  ): Promise<Alert> => {
     validateAlertId(id);
 
-    const response = await apiRequest<Alert>(
-      `/alerts/${encodeURIComponent(id)}`,
-      {
-        method: "GET",
-      }
-    );
+    const response =
+      await scopedApiRequest<Alert>(
+        authScope,
+        `/alerts/${encodeURIComponent(id)}`,
+        {
+          method: "GET",
+        }
+      );
 
     if (!response.data) {
       throw new Error(
